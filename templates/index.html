@@ -1,11 +1,15 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello, World!!</title>
+    <link rel="stylesheet" href="{{ url_for('serve_static', filename='style.css') }}">
+    <script src="{{ url_for('serve_static', filename='somethingJS.js') }}" defer></script>
 </head>
 <body>
     <h1>Hello, World!!!!</h1>
+    <img class="my_image" src="{{ url_for('serve_static', filename='images/nah_id_win.jpg') }}" alt="winner">
 </body>
 </html>
