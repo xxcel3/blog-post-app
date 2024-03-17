@@ -4,12 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello, World!!</title>
-    <link rel="stylesheet" href="{{ url_for('serve_static', filename='style.css') }}">
-    <script src="{{ url_for('serve_static', filename='somethingJS.js') }}" defer></script>
+    <title>Hobbied</title>
+    <link rel="shortcut icon" type="image/png" href="../static/images/icon.png">
+    <link rel="stylesheet" type="text/css" href="../static/style.css">
 </head>
-<body>
-    <h1>Hello, World!!!!</h1>
-    <img class="my_image" src="{{ url_for('serve_static', filename='images/nah_id_win.jpg') }}" alt="winner">
+<body onload="listen()">
+    <div class="wrapper">
+        <div class="wrapper" id="login" style="float: left;">
+            <div class="title" id="login_title"><span>Login Form</span></div>
+            <form class="forms" action="/login" method="post" enctype="application/x-www-form-urlencoded">
+                <div class="row">
+                    <label>Username:
+                        <input id="login-form-username" type="text" name="username_login"/>
+                    </label>
+                
+                <br/>
+                <label>Password:&nbsp;
+                    <input id="login-form-pass" type="password" name="password_login">
+                </label>
+                <br/>
+                <br/>
+                    <input type="submit" value="Login">
+                
+                </div>                    
+            </form>
+        </div>
+
+        <div class="wrapper" id="register" style="float:right">
+            <div class="title" id="register_title"><span>Registration Form</span></div>
+            <form class="forms" action="/register" method="post" enctype="application/x-www-form-urlencoded">
+                <div class="row">
+                <label>Username:
+                    <input id="reg-form-username" type="text" name="username_reg"/>
+                </label>
+                <br/>
+                <label>Password:&nbsp;
+                    <input id="reg-form-pass" type="password" name="password_reg">
+                </label>
+                <label>Confirm Password:&nbsp;
+                    <input id="reg-form-pass-confirm" type="password" name="password_reg">
+                </label>
+                <br/>
+                <br/>
+                    <input type="submit" value="Register">                
+            </div>
+            </form>
+        </div>
+
+    </div>
+
+    <script src="../static/all_functions.js"></script>
 </body>
 </html>
