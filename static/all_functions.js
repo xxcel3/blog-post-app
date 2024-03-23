@@ -1,5 +1,14 @@
 // static/js/somethingJS.js
-function listen() {
-    document.addEventListener("keypress",)
+function welcome() {
+    document.addEventListener("keypress", function (event) {
+        if (event.code === "Enter") {
+            sendChat();
+        }
+    });
+
+    document.getElementById("chat-text-box").focus();
+
+    updateChat();
 }
+
 

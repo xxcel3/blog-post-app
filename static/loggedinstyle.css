@@ -33,3 +33,53 @@
     padding-top: 13px;
   }
 
+  #posts {
+    background-color:black;
+    height: 670px;
+    width: 1080px;
+    margin-top: 50px;
+    opacity: 0.97;
+    padding-left: 100px;
+    padding-top: 50px;
+    box-sizing: border-box;
+  }
+
+  .singular-post {
+    width: 880px;
+    height: 200px;
+    border-radius: 10px;
+    background-color: #f7f7f7;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+  }
+
+  .singular-post:hover {
+    background-color: blue;
+    opacity: 0.50;
+  }
+
+  .cont {
+    display: flex;
+    justify-content: space-around;
+    height: 78%
+  }
+
+  .chat {
+      width: 70%;
+      background-color:blue;
+      opacity: 0.6;
+      padding: 20px;
+  }
+
+  #chat-messages {
+    height: 500px;
+    overflow: scroll;
+  }
+
+  .chat-form {
+    height: 30px;
+  }
+
+  #post-header {
+    color: white;
+  }
