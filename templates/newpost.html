@@ -16,14 +16,14 @@
             <h1>Create New Post</h1>
         </div>
         <div class="new-post-form">
-            <form id="post-form" action="/frontpage/newPost" method="post" enctype="application/x-www-form-urlencoded">
+            <form id="post-form" action="/submitNewPost" method="post" enctype="application/x-www-form-urlencoded">
                 <label for="post-title">Title:</label><br>
                 <input type="text" id="post-title" name="post-title"><br>
 
                 <label for="post-description">Description:</label><br>
                 <textarea id="post-description" name="post-description" rows="4" cols="50"></textarea><br>
 
-                <button type="submit" class="new-post-button">Submit</button>
+                <input type="submit" value="Submit">
             </form>
         </div>
     </div>

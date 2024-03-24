@@ -35,11 +35,11 @@
 
         <div class="wrapper" id="register" style="float:right">
             <div class="title" id="register_title"><span>Registration Form</span></div>
-            {% if error %}
-            <p style="color: red;">{{ error }}</p>
+            {% if reg_error %}
+            <p style="color: red;">{{ reg_error }}</p>
             {% endif %}
-            {% if success %}
-            <p style="color: red;">{{ success }}</p>
+            {% if reg_success %}
+            <p style="color: green;">{{ reg_success }}</p>
             {% endif %}
             <form class="forms" id="registration_form" action="/register" method="post" enctype="application/x-www-form-urlencoded">
                 <div class="row">

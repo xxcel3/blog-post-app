@@ -78,13 +78,11 @@ function sendChat() {
 
 //we need post_navigate() when a post is clicked
 
-//create newPost() which will send a GET /frontpage/newPost request
+//create newPost() which will send a GET /newPost request
 function newPost() {
-    window.location.href = "/frontpage/newPost";
+    window.location.href = "/newPost";
 }
-function submitNewPost() {
-    window.location.href = "/frontpage/newPost";
-}
+
 
 document.addEventListener("DOMContentLoaded", function() {
     //like buttons
