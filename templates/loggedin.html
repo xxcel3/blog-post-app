@@ -12,7 +12,7 @@
     <div class="wrapper">
         <div class="contents" id="black-box">
             <div class="name-holder" id="username-holder">
-                <span>{{Username}}</span>
+                <span>Welcome {{Username}}!</span>
             </div>
         </div>
         <div class="scrollable" id="posts">
@@ -25,8 +25,12 @@
                 with corresponding ids/names which can be used to retrieve a post's respective chats-->
             {% for postInfo in postsInfo %}
 
-                <!--might need {{username}}, {{creationTime}}-->
-                <div class="singular-post" onclick="post_navigate()">{{postInfo.postTitle}} Posted by {{postInfo.username}}, on: {{postInfo.time}} Likes: {{postInfo.likes}}</div>
+                <div class="singular-post" onclick="post_navigate()">
+                    <!--classes below could be used for css styling later-->
+                    <h2 class="post-title">{{postInfo.postTitle}}</h2>
+                    <h3 class="post-info">Posted by {{postInfo.username}}, on {{postInfo.time}}</h3>
+                    <h3 class="post-likes">Likes: {{postInfo.likes}}</h3>
+                </div>
 
             {% endfor %}
         </div>

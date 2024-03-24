@@ -76,8 +76,8 @@ def login():
         users_collection.update_one({'username': username}, {'$set': {'auth_token': token}})
 
         # set authentication token as HttpOnly cookie
-        str1 = "Login successful! Welcome: " + str(username)
-        response = make_response(redirect(url_for('index', success=str1)))
+        #str1 = "Login successful! Welcome: " + str(username)
+        response = make_response(redirect("/frontpage"))
         response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
