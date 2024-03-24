@@ -50,8 +50,7 @@ def index():
         hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
         user = users_collection.find_one({"auth_token": hashed_auth_token})
         if user:
-            return render_template("loggedin.html")
-            # response = make_response(redirect("/"))
+            return render_template("loggedin.html", Username=user['username'])
     # otherwise user must login
     else:  
         reg_error = request.args.get('reg_error')
