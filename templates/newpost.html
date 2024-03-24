@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Post</title>
+    <link rel="shortcut icon" type="image/png" href="../static/images/icon.png">
+    <link rel="stylesheet" type="text/css" href="../static/newpoststyle.css">
+</head>
+<body>
+    <div id="black-box">
+        <div id="username-holder">{{Username}}</div>
+    </div>
+    <div id="posts">
+        <div id="post-header">
+            <h1>Create New Post</h1>
+        </div>
+        <div class="new-post-form">
+            <form id="post-form" action="/frontpage/newPost" method="post" enctype="application/x-www-form-urlencoded">
+                <label for="post-title">Title:</label><br>
+                <input type="text" id="post-title" name="post-title"><br>
+
+                <label for="post-description">Description:</label><br>
+                <textarea id="post-description" name="post-description" rows="4" cols="50"></textarea><br>
+
+                <button type="submit" class="new-post-button">Submit</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

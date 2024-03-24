@@ -6,7 +6,7 @@ import uuid
 import json
 import html
 import bcrypt
-import datetime
+from datetime import datetime, timedelta, timezone
 
 
 # =======
@@ -72,7 +72,7 @@ def login():
 
     # Set authentication token as HttpOnly cookie
     response = make_response(jsonify({'message': 'Login successful'}))
-    response.set_cookie('auth_token', token, httponly=True, expires=datetime.datetime.now() + datetime.timedelta(hours=1))
+    response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
     
     response.headers['X-Content-Type-Options'] = 'nosniff'
 
@@ -127,27 +127,63 @@ def getMessages():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
-#method below needs work, not finished
+#can maybe add ajax to listen for new posts to not have to refresh
 @app.route('/frontpage', methods=['GET']) #gets redirected here after successfully logging in
 def displayLoginHomepage():
+    authToken = request.cookies.get("auth_token")
+    userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+    currAuthUser = userInfo[0]["username"]
+    
+    query = {
+        "postTitle": {"$exists": True},
+        "username": {"$exists": True},
+        "time": {"$exists": True},
+        "likes": {"$exists": True},
+    }
 
-    username = "changeMe" #determine this based on auth token
-    allPostTitles = ["testTitle1", "testTitle2", "testTitle3", "testTitle4", "testTitle5"] #find a way to get a list of every postTitle from the DataBase
+    posts_info = list(post_collection.find(query))
 
-    return render_template('loggedin.html', postTitles= allPostTitles, Username = username) #add parameters to replace the html contents
+    #example below is just hardcoded
+    #posts_info = [{"postTitle":"title1", "time":"3-24-2024 12:00:00", "likes": "0"},
+    #              {"postTitle":"title2", "time":"3-25-2024 15:05:02", "likes": "10"},
+    #              {"postTitle":"title3", "time":"3-20-2024 18:30:45", "likes": "5"}] 
 
-#method below needs work, not finished
+    return render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser) #add parameters to replace the html contents
+
+#maybe error handling when creating a post (ex. can post with empty title/description)
 @app.route('/frontpage/newPost', methods=['GET','POST']) #gets redirected here after successfully logging in
 def addNewPost():
     if request.method == 'GET':
         #just render the template so user can input stuff
-
-        return render_template('newpost.html') #html that will have basic fields of input for user  
+        authToken = request.cookies.get("auth_token")
+        userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+        
+        currAuthUser = userInfo[0]["username"]
+        return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
+    
     elif request.method == 'POST':
         #maybe new html to add title for post
+        post_title = html.escape(request.form.get('post-title'))
+        post_description = html.escape(request.form.get('post-description'))
+
         #keep track of creation time
+        current_time = datetime.now()
+        offset = timedelta(hours=-4)
+        current_time = current_time.replace(tzinfo=timezone.utc) + offset   #adding offset to get eastern time
+        formatted_time = current_time.strftime("%m-%d-%Y %H:%M:%S")
+
         #also keep track of the user of this post
-        #initialize likes to 0
+        authToken = request.cookies.get("auth_token")
+        userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+        
+        currAuthUser = userInfo[0]["username"]
+
+        #initialize likes to 0 and create id
+        id = str(uuid.uuid4())
+        likes = "0"
+        
+        #inserting newly created post to db
+        post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes})
 
         return redirect('/frontpage') #hopefully frontpage will now show the new created post
 

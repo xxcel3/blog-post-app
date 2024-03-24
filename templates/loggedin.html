@@ -17,13 +17,17 @@
         </div>
         <div class="scrollable" id="posts">
             <!-- New Post button, not completed yet -->
-            <button class="new-post-button" onclick="jsRedirectMaybe()">New Post</button>
+            <button class="new-post-button" onclick="newPost()">New Post</button>
             
-            <div class="singular-post" onclick="post_navigate()">Click me</div>
+            <!--<div class="singular-post" onclick="post_navigate()">Click me</div>> -->
+
             <!--somehow need to find a way later to dynamically alter the html with new posts here, 
                 with corresponding ids/names which can be used to retrieve a post's respective chats-->
-            {% for title in postTitles %}
-                <div class="singular-post" onclick="post_navigate()">{{title}}</div>
+            {% for postInfo in postsInfo %}
+
+                <!--might need {{username}}, {{creationTime}}-->
+                <div class="singular-post" onclick="post_navigate()">{{postInfo.postTitle}} Posted by {{postInfo.username}}, on: {{postInfo.time}} Likes: {{postInfo.likes}}</div>
+
             {% endfor %}
         </div>
     

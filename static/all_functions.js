@@ -59,7 +59,7 @@ function sendChat() {
     // Using AJAX
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
+        if (this.readyState === 4 && this.status === 200) { //checking request.readyState
             console.log(this.response);
         }
     }
@@ -78,7 +78,13 @@ function sendChat() {
 
 //we need post_navigate() when a post is clicked
 
-
+//create newPost() which will send a GET /frontpage/newPost request
+function newPost() {
+    window.location.href = "/frontpage/newPost";
+}
+function submitNewPost() {
+    window.location.href = "/frontpage/newPost";
+}
 
 document.addEventListener("DOMContentLoaded", function() {
     //like buttons
