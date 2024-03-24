@@ -1,5 +1,3 @@
-// static/js/somethingJS.js
-
 function welcome() { //might need modification in future, is this even needed?
     document.addEventListener("keypress", function (event) {
         if (event.code === "Enter") {
@@ -32,12 +30,14 @@ function current_post_listen() { //based on updateChat() from hw
     request.open("GET", "/id/chat-message"); //id will be for each topic but for now will hard code as /id/*
     request.send();
 }
+
 function addMessageToChat(messageJSON) {
     const chatMessages = document.getElementById("chat-messages");
     chatMessages.innerHTML += chatMessageHTML(messageJSON);
     chatMessages.scrollIntoView(false);
     chatMessages.scrollTop = chatMessages.scrollHeight - chatMessages.clientHeight;
 }
+
 function chatMessageHTML(messageJSON) {
     const username = messageJSON.username;
     const message = messageJSON.message;
@@ -45,6 +45,7 @@ function chatMessageHTML(messageJSON) {
     let messageHTML = "<br><span id='message_" + messageId + "'><b>" + username + "</b>: " + message + "</span>";
     return messageHTML;
 }
+
 function clearChat() {
     const chatMessages = document.getElementById("chat-messages");
     chatMessages.innerHTML = "";
@@ -74,7 +75,6 @@ function sendChat() {
     
     chatTextBox.focus();
 }
-
 
 //we need post_navigate() when a post is clicked
 
@@ -106,7 +106,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-
 function recordLike(postID) {
     fetch('/record-like', {
         method: 'POST',
@@ -117,7 +116,6 @@ function recordLike(postID) {
         body: JSON.stringify({ postId: postID })
     })
 }
-
 
 function recordDislike(postID) {
     fetch('/record-dislike', {
@@ -130,8 +128,5 @@ function recordDislike(postID) {
     })
 }
 
-
 // https://medium.com/swlh/javascript-how-to-create-a-like-button-3716c33b1879
-
-
 

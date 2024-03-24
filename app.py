@@ -1,6 +1,5 @@
 # <<<<<<< HEAD
 from flask import Flask, render_template, send_from_directory, request, jsonify, make_response, redirect, url_for
-# from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
 import uuid
 import json
@@ -10,9 +9,6 @@ from datetime import datetime, timedelta, timezone
 
 
 # =======
-# from flask import Flask, render_template, send_from_directory, request, jsonify, redirect, url_for
-# import bcrypt
-# from pymongo import MongoClient
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
 app = Flask(__name__)
@@ -22,79 +18,70 @@ mongo_client = MongoClient("mongo", 27017)
 db = mongo_client["cse312_Group_Project"]
 users_collection = db['users']
 
-post1_chat_collection = db["post1_chat"] #we need to find a way to create unique chat collections per unique posts
+post1_chat_collection = db["post1_chat"] # we need to find a way to create unique chat collections per unique posts
+post_collection = db["posts"] # every post should keep track of user who posted and time of post creation, maybe number of current likes(might have to use ajax to update this)
 
-post_collection = db["posts"] #every post should keep track of user who posted and time of post creation ,maybe number of current likes(might have to use ajax to update this)
-
-# mongo = PyMongo(app)
-# bcrypt = Bcrypt(app)
-@app.route('/register', methods=['POST'])
-def register():
-    username = request.form.get('username_reg')
-    password = request.form.get('password_reg')
-    confirm_password = request.form.get('password_reg_confirm')
-
-    if not (username and password and confirm_password):
-        return jsonify({'error': 'Please enter all fields'}), 400
-    
-    if password != confirm_password:
-        return jsonify({'error': 'Passwords do not match'}), 400
-    
-    if users_collection.find_one({'username': username}):
-        return jsonify({'error': 'Username taken'}), 400
-
-    # salt and hash the password
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password.encode(), salt).decode()
-
-    #insert 
-    users_collection.insert_one({'username': username, 'password': hashed_password})
-
-    return redirect(url_for('index'))
-
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form.get('username_login')
-    password = request.form.get('password_login')
-
-    if not (username and password):
-        return jsonify({'error': 'BOTH Password and Username Needed'}), 400
-    # users = mongo.db.users
-    # data = request.get_json()
-    user = users_collection.find_one({'username': username})
-
-    if not user or not bcrypt.checkpw(password.encode(), user['password'].encode()):
-        return jsonify({'error': 'Invalid username or password'}), 401
-
-    # Generate authentication token
-    token = str(uuid.uuid4())
-    users_collection.update_one({'username': username}, {'$set': {'auth_token': token}})
-
-    # Set authentication token as HttpOnly cookie
-    response = make_response(jsonify({'message': 'Login successful'}))
-    response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
-    
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-
-    return response
-    
 @app.route('/static/<filename>')
 def serve_static(filename):
     return send_from_directory('static', filename)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    error = request.args.get('error')
+    login_error = request.args.get('login_error')
+    success = request.args.get('success')
+    if success != None:
+        if success.startswith("Login successful!"):
+            return render_template('loggedin.html', Username=success)
+    return render_template('index.html', error=error, login_error=login_error, success=success)
 
-'''
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.form.get('username_reg')
+    password = request.form.get('password_reg')
+    confirm_password = request.form.get('password_reg_confirm')
+    
+    existing_user = users_collection.find_one({'username': username})
+    if existing_user:
+        # redirect to homepage with an error message
+        return redirect(url_for('index', error="Username is already taken. Please choose a different one."))
+    elif not (username and password and confirm_password):
+        return redirect(url_for('index', error="Please fill in all necessary fields"))
+    elif password != confirm_password:
+        return redirect(url_for('index', error="Passwords don't match"))
+    else:
+        # salt and hash the password
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password.encode(), salt).decode()
+
+        # insert 
+        users_collection.insert_one({'username': username, 'password': hashed_password})
+
+        # redirect to homepage 
+        return redirect(url_for('index', error="Registration successful! Please login."))
+
 @app.route('/login', methods=['POST'])
 def login():
-    # put authentication code for login
+    username = request.form.get('username_login')
+    password = request.form.get('password_login')
 
-@app.route('/logout')
-def logout():
-    pass
-'''
+    user = users_collection.find_one({'username': username})
+    if not user or not bcrypt.checkpw(password.encode(), user['password'].encode()):
+        return redirect(url_for('index', login_error="Invalid username or password"))
+    elif not (username and password):
+        return redirect(url_for('index', login_error="Please fill in all necessary fields"))
+    else:
+        # generate authentication token
+        token = str(uuid.uuid4())
+        users_collection.update_one({'username': username}, {'$set': {'auth_token': token}})
+
+        # set authentication token as HttpOnly cookie
+        str1 = "Login successful! Welcome: " + str(username)
+        response = make_response(redirect(url_for('index', success=str1)))
+        response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+
+        return response
 
 # Where we get messages from DB
 @app.route('/id/chat-message', methods=['GET','POST'])
