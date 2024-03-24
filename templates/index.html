@@ -12,6 +12,9 @@
     <div class="wrapper">
         <div class="wrapper" id="login" style="float: left;">
             <div class="title" id="login_title"><span>Login Form</span></div>
+            {% if login_error %}
+            <p style="color: red;">{{ login_error }}</p>
+            {% endif %}
             <form class="forms" action="/login" method="post" enctype="application/x-www-form-urlencoded">
                 <div class="row">
                     <label>Username:
@@ -32,7 +35,10 @@
 
         <div class="wrapper" id="register" style="float:right">
             <div class="title" id="register_title"><span>Registration Form</span></div>
-            <form class="forms" action="/register" method="post" enctype="application/x-www-form-urlencoded">
+            {% if error %}
+            <p style="color: red;">{{ error }}</p>
+            {% endif %}
+            <form class="forms" id="registration_form" action="/register" method="post" enctype="application/x-www-form-urlencoded">
                 <div class="row">
                 <label>Username:
                     <input id="reg-form-username" type="text" name="username_reg"/>
