@@ -5,10 +5,9 @@ import uuid
 import json
 import html
 import bcrypt
+import hashlib
 from datetime import datetime, timedelta, timezone
 
-
-# =======
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
 app = Flask(__name__)
@@ -23,32 +22,57 @@ post_collection = db["posts"] # every post should keep track of user who posted 
 
 @app.route('/static/<filename>')
 def serve_static(filename):
-    return send_from_directory('static', filename)
+    response = send_from_directory('static', filename)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # mime types
+    if filename.endswith('.css'):
+        response.headers['Content-Type'] = 'text/css'
+    elif filename.endswith('.js'):
+        response.headers['Content-Type'] = 'application/javascript'
+    return response
+
+@app.route('/static/images/<filename>')
+def serve_images(filename):
+    response = send_from_directory('static/images', filename)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # mime types
+    if filename.endswith('.png'):
+        response.headers['Content-Type'] = 'image/png'
+    elif filename.endswith('.jpg') or filename.endswith('.jpeg'):
+        response.headers['Content-Type'] = 'image/jpeg'
+    return response
 
 @app.route('/')
 def index():
-    error = request.args.get('error')
-    login_error = request.args.get('login_error')
-    success = request.args.get('success')
-    if success != None:
-        if success.startswith("Login successful!"):
-            return render_template('loggedin.html', Username=success)
-    return render_template('index.html', error=error, login_error=login_error, success=success)
+    auth_token = request.cookies.get('auth_token', None)
+    # if alr logged in
+    if auth_token:
+        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+        user = users_collection.find_one({"auth_token": hashed_auth_token})
+        if user:
+            response = make_response(redirect("/frontpage"))
+    # otherwise user must login
+    else:  
+        error = request.args.get('error')
+        login_error = request.args.get('login_error')
+        response = make_response(render_template('index.html', error=error, login_error=login_error))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username_reg')
     password = request.form.get('password_reg')
     confirm_password = request.form.get('password_reg_confirm')
-    
+
     existing_user = users_collection.find_one({'username': username})
     if existing_user:
         # redirect to homepage with an error message
-        return redirect(url_for('index', error="Username is already taken. Please choose a different one."))
+        response = make_response(redirect(url_for('index', error="Username is already taken. Please choose a different one.")))
     elif not (username and password and confirm_password):
-        return redirect(url_for('index', error="Please fill in all necessary fields"))
+        response = make_response(redirect(url_for('index', error="Please fill in all necessary fields")))
     elif password != confirm_password:
-        return redirect(url_for('index', error="Passwords don't match"))
+        response = make_response(redirect(url_for('index', error="Passwords don't match")))
     else:
         # salt and hash the password
         salt = bcrypt.gensalt()
@@ -58,7 +82,9 @@ def register():
         users_collection.insert_one({'username': username, 'password': hashed_password})
 
         # redirect to homepage 
-        return redirect(url_for('index', error="Registration successful! Please login."))
+        response = make_response(redirect(url_for('index', error="Registration successful! Please login.")))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -73,15 +99,31 @@ def login():
     else:
         # generate authentication token
         token = str(uuid.uuid4())
-        users_collection.update_one({'username': username}, {'$set': {'auth_token': token}})
+        # hashed token in database
+        hashed_auth_token = hashlib.md5(token.encode()).hexdigest()
+        users_collection.update_one({'username': username}, {'$set': {'auth_token': hashed_auth_token}})
 
         # set authentication token as HttpOnly cookie
-        #str1 = "Login successful! Welcome: " + str(username)
         response = make_response(redirect("/frontpage"))
         response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
         return response
+    
+@app.route('/logout', methods=['POST'])
+def logout():
+    auth_token = request.cookies.get('auth_token')  
+    hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+
+    # remove auth token 
+    users_collection.update_one({'auth_token': hashed_auth_token}, {'$unset': {'auth_token': ""}})
+
+    # clear the auth token cookie 
+    response = make_response(redirect(url_for('index')))
+    response.set_cookie('auth_token', '', expires=0)  
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+
+    return response
 
 # Where we get messages from DB
 @app.route('/id/chat-message', methods=['GET','POST'])
@@ -101,7 +143,8 @@ def getMessages():
     elif request.method == 'POST':
         id = str(uuid.uuid4())
         authToken = request.cookies.get("auth_token")
-        userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+        hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+        userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
         currAuthUser = userInfo[0]["username"]
 
@@ -118,7 +161,8 @@ def getMessages():
 @app.route('/frontpage', methods=['GET']) #gets redirected here after successfully logging in
 def displayLoginHomepage():
     authToken = request.cookies.get("auth_token")
-    userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+    hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+    userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))  
     currAuthUser = userInfo[0]["username"]
     
     query = {
@@ -143,7 +187,8 @@ def addNewPost():
     if request.method == 'GET':
         #just render the template so user can input stuff
         authToken = request.cookies.get("auth_token")
-        userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+        hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+        userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
         currAuthUser = userInfo[0]["username"]
         return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
@@ -161,7 +206,8 @@ def addNewPost():
 
         #also keep track of the user of this post
         authToken = request.cookies.get("auth_token")
-        userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+        hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+        userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
         currAuthUser = userInfo[0]["username"]
 
@@ -181,7 +227,6 @@ def displaySpecificPost():
     #which should have a unique id to it that every chat message has so we can find only the specific chat messages needed
 
     return render_template('post.html')
-
 
 # needs to be 8080
 if __name__ == '__main__':

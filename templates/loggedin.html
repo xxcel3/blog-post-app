@@ -13,6 +13,10 @@
         <div class="contents" id="black-box">
             <div class="name-holder" id="username-holder">
                 <span>Welcome {{Username}}!</span>
+                <!-- Logout button -->
+                <form action="/logout" method="post">
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
             </div>
         </div>
         <div class="scrollable" id="posts">
