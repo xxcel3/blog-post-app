@@ -38,6 +38,9 @@
             {% if error %}
             <p style="color: red;">{{ error }}</p>
             {% endif %}
+            {% if success %}
+            <p style="color: red;">{{ success }}</p>
+            {% endif %}
             <form class="forms" id="registration_form" action="/register" method="post" enctype="application/x-www-form-urlencoded">
                 <div class="row">
                 <label>Username:

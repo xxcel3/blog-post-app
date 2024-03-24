@@ -50,7 +50,8 @@ def index():
         hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
         user = users_collection.find_one({"auth_token": hashed_auth_token})
         if user:
-            response = make_response(redirect("/frontpage"))
+            return render_template("loggedin.html")
+            # response = make_response(redirect("/"))
     # otherwise user must login
     else:  
         error = request.args.get('error')
@@ -82,7 +83,8 @@ def register():
         users_collection.insert_one({'username': username, 'password': hashed_password})
 
         # redirect to homepage 
-        response = make_response(redirect(url_for('index', error="Registration successful! Please login.")))
+               
+        response = make_response(redirect(url_for('index', success="Registration successfull")))
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
@@ -104,7 +106,7 @@ def login():
         users_collection.update_one({'username': username}, {'$set': {'auth_token': hashed_auth_token}})
 
         # set authentication token as HttpOnly cookie
-        response = make_response(redirect("/frontpage"))
+        response = make_response(redirect("/"))
         response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
