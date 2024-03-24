@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="../static/images/icon.png">
     <link rel="stylesheet" type="text/css" href="../static/loggedinstyle.css">
 </head>
-<body onload="listen()">
+<body onload="welcome()"><!--current_post_listen() called in welcome()-->
     <div class="wrapper">
         <div class="contents" id="black-box">
             <div class="name-holder" id="username-holder">
@@ -37,7 +37,7 @@
                                 Chat:
                                 <input id="chat-text-box" type="text">
                             </label>
-                            <button id="chat-button" onclick="sendChat()">Send</button>
+                            <button id="chat-button" onclick="sendChat()">Send</button> <!--modify later so that chats also reference what post they are being posted from-->
                         </div>
                 
                     </div>

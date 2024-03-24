@@ -3,6 +3,8 @@ from flask import Flask, render_template, send_from_directory, request, jsonify,
 # from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
 import uuid
+import json
+import html
 import bcrypt
 import datetime
 
@@ -19,6 +21,10 @@ app = Flask(__name__)
 mongo_client = MongoClient("mongo", 27017)
 db = mongo_client["cse312_Group_Project"]
 users_collection = db['users']
+
+post1_chat_collection = db["post1_chat"] #we need to find a way to create unique chat collections per unique posts
+
+post_collection = db["posts"] #every post should keep track of user who posted and time of post creation ,maybe number of current likes(might have to use ajax to update this)
 
 # mongo = PyMongo(app)
 # bcrypt = Bcrypt(app)
@@ -67,10 +73,11 @@ def login():
     # Set authentication token as HttpOnly cookie
     response = make_response(jsonify({'message': 'Login successful'}))
     response.set_cookie('auth_token', token, httponly=True, expires=datetime.datetime.now() + datetime.timedelta(hours=1))
-    return response
-
     
+    response.headers['X-Content-Type-Options'] = 'nosniff'
 
+    return response
+    
 @app.route('/static/<filename>')
 def serve_static(filename):
     return send_from_directory('static', filename)
@@ -78,7 +85,6 @@ def serve_static(filename):
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 '''
 @app.route('/login', methods=['POST'])
@@ -89,6 +95,70 @@ def login():
 def logout():
     pass
 '''
+
+# Where we get messages from DB
+@app.route('/id/chat-message', methods=['GET','POST'])
+def getMessages():
+    if request.method == 'GET':    
+        #all the messages from the chat collection of the DB
+        allMessages = post1_chat_collection.find({}) #later can find chat message for specified post
+
+        chats = []
+        for message in allMessages:
+            chats.append({"message": message["message"], "username": message["username"], "id": message["id"]}) 
+
+        allMessagesJ = json.dumps(chats)
+        response = make_response(allMessagesJ)
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+    elif request.method == 'POST':
+        id = str(uuid.uuid4())
+        authToken = request.cookies.get("auth_token")
+        userInfo = list(users_collection.find({"auth_token": f"{authToken}"}))
+        
+        currAuthUser = userInfo[0]["username"]
+
+        data = request.json
+        message = html.escape(data["message"])
+
+        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from
+
+        response = make_response("", 200)   
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+
+#method below needs work, not finished
+@app.route('/frontpage', methods=['GET']) #gets redirected here after successfully logging in
+def displayLoginHomepage():
+
+    username = "changeMe" #determine this based on auth token
+    allPostTitles = ["testTitle1", "testTitle2", "testTitle3", "testTitle4", "testTitle5"] #find a way to get a list of every postTitle from the DataBase
+
+    return render_template('loggedin.html', postTitles= allPostTitles, Username = username) #add parameters to replace the html contents
+
+#method below needs work, not finished
+@app.route('/frontpage/newPost', methods=['GET','POST']) #gets redirected here after successfully logging in
+def addNewPost():
+    if request.method == 'GET':
+        #just render the template so user can input stuff
+
+        return render_template('newpost.html') #html that will have basic fields of input for user  
+    elif request.method == 'POST':
+        #maybe new html to add title for post
+        #keep track of creation time
+        #also keep track of the user of this post
+        #initialize likes to 0
+
+        return redirect('/frontpage') #hopefully frontpage will now show the new created post
+
+#method below needs work, not finished
+@app.route('/id', methods=['GET']) #gets redirected here to /id after clicking on the first post that is in the loggedin.html
+def displaySpecificPost():
+    #when js creates GET /id request, itll come from /frontpage after clicking on an existing post, 
+    #which should have a unique id to it that every chat message has so we can find only the specific chat messages needed
+
+    return render_template('post.html')
+
 
 # needs to be 8080
 if __name__ == '__main__':

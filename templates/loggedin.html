@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="../static/images/icon.png">
     <link rel="stylesheet" type="text/css" href="../static/loggedinstyle.css">
 </head>
-<body onload="listen()">
+<body onload="available_posts_listen()">
     <div class="wrapper">
         <div class="contents" id="black-box">
             <div class="name-holder" id="username-holder">
@@ -16,13 +16,19 @@
             </div>
         </div>
         <div class="scrollable" id="posts">
-            <div class="singular-post" onclick="post_navigate()">Clcik me</div>
-            <div class="singular-post" onclick="post_navigate()"></div>
-
+            <!-- New Post button, not completed yet -->
+            <button class="new-post-button" onclick="jsRedirectMaybe()">New Post</button>
+            
+            <div class="singular-post" onclick="post_navigate()">Click me</div>
+            <!--somehow need to find a way later to dynamically alter the html with new posts here, 
+                with corresponding ids/names which can be used to retrieve a post's respective chats-->
+            {% for title in postTitles %}
+                <div class="singular-post" onclick="post_navigate()">{{title}}</div>
+            {% endfor %}
         </div>
-        
+    
     </div>
-
+    
     <script src="../static/all_functions.js"></script>
-</body>
+    </body>
 </html>
