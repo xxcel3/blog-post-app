@@ -70,15 +70,15 @@ def index():
                 #              {"postTitle":"title2", "time":"3-25-2024 15:05:02", "likes": "10"},
                 #              {"postTitle":"title3", "time":"3-20-2024 18:30:45", "likes": "5"}] 
 
-                return render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser) #add parameters to replace the html contents
+                for post_info in posts_info:
+                    post_info['postid'] = str(post_info['id']) 
+
+                return render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser, ) #add parameters to replace the html contents
     # otherwise user must login
     else:  
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
-        reg_error = request.args.get('reg_error')
-        reg_success = request.args.get('reg_success')
         login_error = request.args.get('login_error')
-        return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
         return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
 
 @app.route('/register', methods=['POST'])
@@ -91,12 +91,9 @@ def register():
     if existing_user:
         # redirect to homepage with an error message
         response = make_response(redirect(url_for('index', reg_error="Username is already taken. Please choose a different one.")))
-        response = make_response(redirect(url_for('index', reg_error="Username is already taken. Please choose a different one.")))
     elif not (username and password and confirm_password):
         response = make_response(redirect(url_for('index', reg_error="Please fill in all necessary fields")))
-        response = make_response(redirect(url_for('index', reg_error="Please fill in all necessary fields")))
     elif password != confirm_password:
-        response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
         response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
     else:
         # salt and hash the password
@@ -107,8 +104,6 @@ def register():
         users_collection.insert_one({'username': username, 'password': hashed_password})
 
         # redirect to homepage 
-               
-        response = make_response(redirect(url_for('index', reg_success="Registration successfull")))
         response = make_response(redirect(url_for('index', reg_success="Registration successfull")))
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
@@ -155,30 +150,30 @@ def logout():
 @app.route("/submitNewPost", methods=["POST"])
 def add_new_post_after_submit():
     #maybe new html to add title for post
-        post_title = html.escape(request.form.get('post-title'))
-        post_description = html.escape(request.form.get('post-description'))
+    post_title = html.escape(request.form.get('post-title'))
+    post_description = html.escape(request.form.get('post-description'))
 
-        #keep track of creation time
-        current_time = datetime.now()
-        offset = timedelta(hours=-4)
-        current_time = current_time.replace(tzinfo=timezone.utc) + offset   #adding offset to get eastern time
-        formatted_time = current_time.strftime("%m-%d-%Y %H:%M:%S")
+    #keep track of creation time
+    current_time = datetime.now()
+    offset = timedelta(hours=-4)
+    current_time = current_time.replace(tzinfo=timezone.utc) + offset   #adding offset to get eastern time
+    formatted_time = current_time.strftime("%m-%d-%Y %H:%M:%S")
 
-        #also keep track of the user of this post
-        authToken = request.cookies.get("auth_token")
-        hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
-        userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
+    #also keep track of the user of this post
+    authToken = request.cookies.get("auth_token")
+    hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+    userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
-        currAuthUser = userInfo[0]["username"]
+    currAuthUser = userInfo[0]["username"]
 
-        #initialize likes to 0 and create id
-        id = str(uuid.uuid4())
-        likes = "0"
+    #initialize likes to 0 and create id
+    id = str(uuid.uuid4())
+    likes = "0"
         
-        #inserting newly created post to db
-        post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes})
+    #inserting newly created post to db
+    post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes})
 
-        return redirect('/') #hopefully frontpage will now show the new created post
+    return redirect('/') #hopefully frontpage will now show the new created post
 
 # Where we get messages from DB
 @app.route('/id/chat-message', methods=['GET','POST'])
@@ -247,8 +242,6 @@ def addNewPost():
         
         currAuthUser = userInfo[0]["username"]
         return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
-        
-
 
 #method below needs work, not finished
 @app.route('/id', methods=['GET']) #gets redirected here to /id after clicking on the first post that is in the loggedin.html
@@ -262,32 +255,35 @@ def displaySpecificPost():
 # Add route for recording likes
 @app.route('/record-like', methods=['POST'])
 def record_like():
-    data = request.json
-    post_id = data.get('id')
+    post_id = request.form.get('postid')
 
-    # Get the liked posts from the user's cookie
-    liked_posts = request.cookies.get('liked_posts')
-    if liked_posts:
-        liked_posts = liked_posts.split(',')
-    else:
-        liked_posts = []
+    auth_token = request.cookies.get("auth_token")
+    hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+    user_info = users_collection.find_one({"auth_token": hashed_auth_token})
 
-    # Check if the user has already liked the post
-    if post_id in liked_posts:
-        # User has already liked the post
-        # redirect the user to another page or display an error message
-        return make_response(redirect("/"))
+    # Get the liked posts from the user
+    if user_info:
+        liked_posts = user_info.get('liked_posts', [])
+        if post_id in liked_posts:
+            # redirect the user to another page or display an error message
+            return make_response(redirect("/"))
 
-    # Update the database to increment the likes for the post with postId
-    post_collection.update_one({'id': post_id}, {'$inc': {'likes': 1}})
+    # update the database to increment the likes for the post with postId
+    post = post_collection.find_one({'id': post_id})
+    current_likes = int(post.get('likes', 0))
+    
+    post_collection.update_one({'id': post_id}, {'$set': {'likes': current_likes + 1}})
 
-    # Add the post_id to the liked_posts cookie
+    # Add the post_id to the liked_posts user's db
     liked_posts.append(post_id)
+    users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
+
     response = make_response(redirect("/"))
-    response.set_cookie('liked_posts', ','.join(liked_posts))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
 
     return response
 
+'''
 # Add route for recording dislikes
 @app.route('/record-dislike', methods=['POST'])
 def record_dislike():
@@ -314,9 +310,10 @@ def record_dislike():
     liked_posts.append(post_id)
     response = make_response(redirect("/"))
     response.set_cookie('liked_posts', ','.join(liked_posts))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
 
     return response
-
+'''
 # needs to be 8080
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=8080)
