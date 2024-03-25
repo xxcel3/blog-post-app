@@ -78,6 +78,14 @@ def index():
                 response.headers['X-Content-Type-Options'] = 'nosniff'
 
                 return response
+        else:
+            reg_error = request.args.get('reg_error')
+            reg_success = request.args.get('reg_success')
+            login_error = request.args.get('login_error')
+            response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error))
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+
+            return response
     # otherwise user must login
     else:  
         reg_error = request.args.get('reg_error')
@@ -282,7 +290,6 @@ def displaySpecificPost():
     
     return response
 
-
 # Add route for recording likes
 @app.route('/record-like', methods=['POST'])
 def record_like():
@@ -331,6 +338,11 @@ def record_unlike():
     # get the disliked posts from the user's db
         liked_posts = user_info.get('liked_posts', [])
 
+        if post_id in liked_posts:
+            response = make_response(redirect("/"))
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+
+            return response
         if post_id in liked_posts:
             liked_posts.remove(post_id)
             users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
