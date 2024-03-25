@@ -91,6 +91,7 @@ def index():
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
         login_error = request.args.get('login_error')
+
         response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error))
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
@@ -266,6 +267,7 @@ def addNewPost():
         userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
         currAuthUser = userInfo[0]["username"]
+
         response = make_response(render_template('newpost.html', Username=currAuthUser)) #html that will have basic fields of input for user  
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
@@ -283,10 +285,9 @@ def displaySpecificPost():
     #based on query string values that has postID, some how let the html update this somehow, 
     #then alter ajax js too notify back end we only want chats tied with that postID
 
-
     response = make_response(render_template('post.html', Username=currAuthUser))
     response.headers['X-Content-Type-Options'] = 'nosniff'
-
+    
     return response
 
 # Add route for recording likes
@@ -303,9 +304,10 @@ def record_like():
         liked_posts = user_info.get('liked_posts', [])
         if post_id in liked_posts:
             # redirect the user to another page or display an error message
+
             response = make_response(redirect("/"))
             response.headers['X-Content-Type-Options'] = 'nosniff'
-
+            
             return response
 
     # update the database to increment the likes for the post with postId
@@ -323,9 +325,9 @@ def record_like():
 
     return response
 
-# add route for recording dislikes
-@app.route('/record-dislike', methods=['POST'])
-def record_dislike():
+# add route to unlike
+@app.route('/record-unlike', methods=['POST'])
+def record_unlike():
     post_id = request.form.get('postid')
 
     auth_token = request.cookies.get("auth_token")
@@ -335,9 +337,8 @@ def record_dislike():
     if user_info:
     # get the disliked posts from the user's db
         liked_posts = user_info.get('liked_posts', [])
-        disliked_posts = user_info.get('disliked_posts', [])
 
-        if post_id in disliked_posts:
+        if post_id in liked_posts:
             response = make_response(redirect("/"))
             response.headers['X-Content-Type-Options'] = 'nosniff'
 
