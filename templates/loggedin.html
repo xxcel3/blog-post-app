@@ -42,6 +42,11 @@
                             <input type="hidden" name="postid" value="{{ postInfo.postid }}">
                             <button type="submit" class="like-button">Like</button>
                         </form>
+                        <form action="/record-dislike" method="post">
+                            <!-- Assign the postid specific to the post -->
+                            <input type="hidden" name="postid" value="{{ postInfo.postid }}">
+                            <button type="submit" class="dislike-button">Unlike</button>
+                        </form>
                     </div>
                 </div>
 

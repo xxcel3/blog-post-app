@@ -292,37 +292,34 @@ def record_like():
 
     return response
 
-'''
-# Add route for recording dislikes
+# add route for recording dislikes
 @app.route('/record-dislike', methods=['POST'])
 def record_dislike():
-    data = request.json
-    post_id = data.get('id')
+    post_id = request.form.get('postid')
 
-    # Get the liked posts from the user's cookie
-    liked_posts = request.cookies.get('liked_posts')
-    if liked_posts:
-        liked_posts = liked_posts.split(',')
-    else:
-        liked_posts = []
+    auth_token = request.cookies.get("auth_token")
+    hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+    user_info = users_collection.find_one({"auth_token": hashed_auth_token})
 
-    # Check if the user has already liked the post
-    if post_id in liked_posts:
-        # User has already liked the post
-        # redirect the user to another page or display an error message
-        return make_response(redirect("/"))
+    if user_info:
+    # get the disliked posts from the user's db
+        liked_posts = user_info.get('liked_posts', [])
+        disliked_posts = user_info.get('disliked_posts', [])
 
-    # Update the database to decrement the likes for the post with postId
-    post_collection.update_one({'id': post_id}, {'$inc': {'likes': -1}})
+        if post_id in disliked_posts:
+            return make_response(redirect("/"))
+        if post_id in liked_posts:
+            liked_posts.remove(post_id)
+            users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
+            post = post_collection.find_one({'id': post_id})
+            current_likes = int(post.get('likes', 0))
+            post_collection.update_one({'id': post_id}, {'$set': {'likes': current_likes - 1}})
 
-    # Add the post_id to the liked_posts cookie
-    liked_posts.append(post_id)
     response = make_response(redirect("/"))
-    response.set_cookie('liked_posts', ','.join(liked_posts))
     response.headers['X-Content-Type-Options'] = 'nosniff'
 
     return response
-'''
+
 # needs to be 8080
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=8080)
