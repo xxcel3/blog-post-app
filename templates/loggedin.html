@@ -13,6 +13,10 @@
         <div class="contents" id="black-box">
             <div class="name-holder" id="username-holder">
                 <span>Welcome {{Username}}!</span>
+                <!-- Logout button -->
+                <form action="/logout" method="post">
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
             </div>
         </div>
         <div class="scrollable" id="posts">
@@ -29,7 +33,15 @@
                     <!--classes below could be used for css styling later-->
                     <h2 class="post-title">{{postInfo.postTitle}}</h2>
                     <h3 class="post-info">Posted by {{postInfo.username}}, on {{postInfo.time}}</h3>
-                    <h3 class="post-likes">Likes: {{postInfo.likes}}</h3>
+                    <h3 class="post-likes">Likes: <span class="like-count">{{postInfo.likes}}</span></h3>
+                    <!-- <h4 class="post-dislikes">Dislikes: {{postInfo.dislikes}}</h4> -->
+                </div>
+
+                <div class="like-dislike">
+                    <button class="like-button" onclick="likePost('{{ postInfo.id }}')">Like</button>
+                    <!-- <span class="like-count">{{ postInfo.likes }}</span> -->
+                    <button class="dislike-button" onclick="dislikePost('{{ postInfo.id }}')">Dislike</button>
+                    <!-- <span class="dislike-count">{{ postInfo.dislikes }}</span> -->
                 </div>
 
             {% endfor %}
