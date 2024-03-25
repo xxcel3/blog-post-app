@@ -292,9 +292,9 @@ def record_like():
 
     return response
 
-# add route for recording dislikes
-@app.route('/record-dislike', methods=['POST'])
-def record_dislike():
+# add route to unlike
+@app.route('/record-unlike', methods=['POST'])
+def record_unlike():
     post_id = request.form.get('postid')
 
     auth_token = request.cookies.get("auth_token")
@@ -304,10 +304,7 @@ def record_dislike():
     if user_info:
     # get the disliked posts from the user's db
         liked_posts = user_info.get('liked_posts', [])
-        disliked_posts = user_info.get('disliked_posts', [])
 
-        if post_id in disliked_posts:
-            return make_response(redirect("/"))
         if post_id in liked_posts:
             liked_posts.remove(post_id)
             users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
