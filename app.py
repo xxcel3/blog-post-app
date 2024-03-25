@@ -61,6 +61,7 @@ def index():
                     "username": {"$exists": True},
                     "time": {"$exists": True},
                     "likes": {"$exists": True},
+                    "id": {"$exists": True},
                 }
 
                 posts_info = list(post_collection.find(query))
@@ -142,7 +143,7 @@ def logout():
 
     # clear the auth token cookie 
     response = make_response(redirect(url_for('index')))
-    response.set_cookie('auth_token', '', expires=0)  
+    response.set_cookie('auth_token', '', expires=-1)  
     response.headers['X-Content-Type-Options'] = 'nosniff'
 
     return response
@@ -180,7 +181,8 @@ def add_new_post_after_submit():
 def getMessages():
     if request.method == 'GET':    
         #all the messages from the chat collection of the DB
-        allMessages = post1_chat_collection.find({}) #later can find chat message for specified post
+        #we are going to want to find all chat messages that contains the appropriate postID from the given request and serve those
+        allMessages = post1_chat_collection.find({}) 
 
         chats = []
         for message in allMessages:
@@ -201,7 +203,7 @@ def getMessages():
         data = request.json
         message = html.escape(data["message"])
 
-        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from
+        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from with its postID
 
         response = make_response("", 200)   
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -244,12 +246,19 @@ def addNewPost():
         return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
 
 #method below needs work, not finished
+#have this request include query string with the postID in which its coming from(might need to create/alter js)
 @app.route('/id', methods=['GET']) #gets redirected here to /id after clicking on the first post that is in the loggedin.html
 def displaySpecificPost():
-    #when js creates GET /id request, itll come from /frontpage after clicking on an existing post, 
-    #which should have a unique id to it that every chat message has so we can find only the specific chat messages needed
+    authToken = request.cookies.get("auth_token")
+    hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+    userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
+    currAuthUser = userInfo[0]["username"]
 
-    return render_template('post.html')
+    #based on query string values that has postID, some how let the html update this somehow, 
+    #then alter ajax js too notify back end we only want chats tied with that postID
+
+
+    return render_template('post.html', Username=currAuthUser)
 
 
 # Add route for recording likes
