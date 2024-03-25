@@ -250,6 +250,7 @@ def addNewPost():
         return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
         
 
+
 #method below needs work, not finished
 #have this request include query string with the postID in which its coming from(might need to create/alter js)
 @app.route('/id', methods=['GET']) #gets redirected here to /id after clicking on the first post that is in the loggedin.html
@@ -264,6 +265,65 @@ def displaySpecificPost():
 
 
     return render_template('post.html', Username=currAuthUser)
+
+
+# Add route for recording likes
+@app.route('/record-like', methods=['POST'])
+def record_like():
+    data = request.json
+    post_id = data.get('id')
+
+    # Get the liked posts from the user's cookie
+    liked_posts = request.cookies.get('liked_posts')
+    if liked_posts:
+        liked_posts = liked_posts.split(',')
+    else:
+        liked_posts = []
+
+    # Check if the user has already liked the post
+    if post_id in liked_posts:
+        # User has already liked the post
+        # redirect the user to another page or display an error message
+        return make_response(redirect("/"))
+
+    # Update the database to increment the likes for the post with postId
+    post_collection.update_one({'id': post_id}, {'$inc': {'likes': 1}})
+
+    # Add the post_id to the liked_posts cookie
+    liked_posts.append(post_id)
+    response = make_response(redirect("/"))
+    response.set_cookie('liked_posts', ','.join(liked_posts))
+
+    return response
+
+# Add route for recording dislikes
+@app.route('/record-dislike', methods=['POST'])
+def record_dislike():
+    data = request.json
+    post_id = data.get('id')
+
+    # Get the liked posts from the user's cookie
+    liked_posts = request.cookies.get('liked_posts')
+    if liked_posts:
+        liked_posts = liked_posts.split(',')
+    else:
+        liked_posts = []
+
+    # Check if the user has already liked the post
+    if post_id in liked_posts:
+        # User has already liked the post
+        # redirect the user to another page or display an error message
+        return make_response(redirect("/"))
+
+    # Update the database to decrement the likes for the post with postId
+    post_collection.update_one({'id': post_id}, {'$inc': {'likes': -1}})
+
+    # Add the post_id to the liked_posts cookie
+    liked_posts.append(post_id)
+    response = make_response(redirect("/"))
+    response.set_cookie('liked_posts', ','.join(liked_posts))
+
+    return response
 
 # needs to be 8080
 if __name__ == '__main__':
