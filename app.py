@@ -50,9 +50,6 @@ def index():
         hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
         user = users_collection.find_one({"auth_token": hashed_auth_token})
         if user:
-<<<<<<< HEAD
-            return render_template("loggedin.html", Username=user['username'])
-=======
             if request.method == "GET":
                 authToken = request.cookies.get("auth_token")
                 hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
@@ -74,21 +71,15 @@ def index():
                 #              {"postTitle":"title3", "time":"3-20-2024 18:30:45", "likes": "5"}] 
 
                 return render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser) #add parameters to replace the html contents
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
     # otherwise user must login
     else:  
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
-<<<<<<< HEAD
-        login_error = request.args.get('login_error')
-        return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
-=======
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
         login_error = request.args.get('login_error')
         return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
         return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -100,12 +91,6 @@ def register():
     if existing_user:
         # redirect to homepage with an error message
         response = make_response(redirect(url_for('index', reg_error="Username is already taken. Please choose a different one.")))
-<<<<<<< HEAD
-    elif not (username and password and confirm_password):
-        response = make_response(redirect(url_for('index', reg_error="Please fill in all necessary fields")))
-    elif password != confirm_password:
-        response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
-=======
         response = make_response(redirect(url_for('index', reg_error="Username is already taken. Please choose a different one.")))
     elif not (username and password and confirm_password):
         response = make_response(redirect(url_for('index', reg_error="Please fill in all necessary fields")))
@@ -113,7 +98,6 @@ def register():
     elif password != confirm_password:
         response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
         response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
     else:
         # salt and hash the password
         salt = bcrypt.gensalt()
@@ -125,10 +109,7 @@ def register():
         # redirect to homepage 
                
         response = make_response(redirect(url_for('index', reg_success="Registration successfull")))
-<<<<<<< HEAD
-=======
         response = make_response(redirect(url_for('index', reg_success="Registration successfull")))
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
@@ -170,8 +151,6 @@ def logout():
     response.headers['X-Content-Type-Options'] = 'nosniff'
 
     return response
-<<<<<<< HEAD
-=======
 
 @app.route("/submitNewPost", methods=["POST"])
 def add_new_post_after_submit():
@@ -200,7 +179,6 @@ def add_new_post_after_submit():
         post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes})
 
         return redirect('/') #hopefully frontpage will now show the new created post
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
 
 # Where we get messages from DB
 @app.route('/id/chat-message', methods=['GET','POST'])
@@ -235,21 +213,12 @@ def getMessages():
         return response
 
 #can maybe add ajax to listen for new posts to not have to refresh
-<<<<<<< HEAD
-@app.route('/frontpage', methods=['GET']) #gets redirected here after successfully logging in
-def displayLoginHomepage():
-    authToken = request.cookies.get("auth_token")
-    hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
-    userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))  
-    currAuthUser = userInfo[0]["username"]
-=======
 # @app.route('/frontpage', methods=['GET']) #gets redirected here after successfully logging in
 # def displayLoginHomepage():
 #     authToken = request.cookies.get("auth_token")
 #     hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
 #     userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))  
 #     currAuthUser = userInfo[0]["username"]
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
     
 #     query = {
 #         "postTitle": {"$exists": True},
@@ -278,38 +247,8 @@ def addNewPost():
         
         currAuthUser = userInfo[0]["username"]
         return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
-<<<<<<< HEAD
-    
-    elif request.method == 'POST':
-        #maybe new html to add title for post
-        post_title = html.escape(request.form.get('post-title'))
-        post_description = html.escape(request.form.get('post-description'))
-
-        #keep track of creation time
-        current_time = datetime.now()
-        offset = timedelta(hours=-4)
-        current_time = current_time.replace(tzinfo=timezone.utc) + offset   #adding offset to get eastern time
-        formatted_time = current_time.strftime("%m-%d-%Y %H:%M:%S")
-
-        #also keep track of the user of this post
-        authToken = request.cookies.get("auth_token")
-        hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
-        userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
-        currAuthUser = userInfo[0]["username"]
 
-        #initialize likes to 0 and create id
-        id = str(uuid.uuid4())
-        likes = "0"
-        dislikes = "0"
-        
-        #inserting newly created post to db
-        post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes, "dislikes": dislikes})
-
-        return redirect('/frontpage') #hopefully frontpage will now show the new created post
-=======
-        
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
 
 #method below needs work, not finished
 @app.route('/id', methods=['GET']) #gets redirected here to /id after clicking on the first post that is in the loggedin.html
@@ -319,32 +258,65 @@ def displaySpecificPost():
 
     return render_template('post.html')
 
-<<<<<<< HEAD
 
 # Add route for recording likes
 @app.route('/record-like', methods=['POST'])
 def record_like():
     data = request.json
-    post_id = data.get('postId')
+    post_id = data.get('id')
+
+    # Get the liked posts from the user's cookie
+    liked_posts = request.cookies.get('liked_posts')
+    if liked_posts:
+        liked_posts = liked_posts.split(',')
+    else:
+        liked_posts = []
+
+    # Check if the user has already liked the post
+    if post_id in liked_posts:
+        # User has already liked the post
+        # redirect the user to another page or display an error message
+        return make_response(redirect("/"))
 
     # Update the database to increment the likes for the post with postId
-    post_collection.update_one({'post_id': post_id}, {'$inc': {'likes': 1}})
+    post_collection.update_one({'id': post_id}, {'$inc': {'likes': 1}})
 
-    return jsonify({'message': 'Like recorded successfully'})
+    # Add the post_id to the liked_posts cookie
+    liked_posts.append(post_id)
+    response = make_response(redirect("/"))
+    response.set_cookie('liked_posts', ','.join(liked_posts))
+
+    return response
 
 # Add route for recording dislikes
 @app.route('/record-dislike', methods=['POST'])
 def record_dislike():
     data = request.json
-    post_id = data.get('postId')
+    post_id = data.get('id')
 
-    # Update the database to increment the dislikes for the post with Id
-    post_collection.update_one({'post_id': post_id}, {'$inc': {'dislikes': 1}})
+    # Get the liked posts from the user's cookie
+    liked_posts = request.cookies.get('liked_posts')
+    if liked_posts:
+        liked_posts = liked_posts.split(',')
+    else:
+        liked_posts = []
 
-    return jsonify({'message': 'Dislike recorded successfully'})
+    # Check if the user has already liked the post
+    if post_id in liked_posts:
+        # User has already liked the post
+        # redirect the user to another page or display an error message
+        return make_response(redirect("/"))
 
-=======
->>>>>>> 0491ca35e63a1deec94e41dfed1e5135611b95b6
+    # Update the database to decrement the likes for the post with postId
+    post_collection.update_one({'id': post_id}, {'$inc': {'likes': -1}})
+
+    # Add the post_id to the liked_posts cookie
+    liked_posts.append(post_id)
+    response = make_response(redirect("/"))
+    response.set_cookie('liked_posts', ','.join(liked_posts))
+
+    return response
+
 # needs to be 8080
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=8080)
