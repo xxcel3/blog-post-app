@@ -61,6 +61,7 @@ def index():
                     "username": {"$exists": True},
                     "time": {"$exists": True},
                     "likes": {"$exists": True},
+                    "id": {"$exists": True},
                 }
 
                 posts_info = list(post_collection.find(query))
@@ -147,7 +148,7 @@ def logout():
 
     # clear the auth token cookie 
     response = make_response(redirect(url_for('index')))
-    response.set_cookie('auth_token', '', expires=0)  
+    response.set_cookie('auth_token', '', expires=-1)  
     response.headers['X-Content-Type-Options'] = 'nosniff'
 
     return response
