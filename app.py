@@ -339,11 +339,6 @@ def record_unlike():
         liked_posts = user_info.get('liked_posts', [])
 
         if post_id in liked_posts:
-            response = make_response(redirect("/"))
-            response.headers['X-Content-Type-Options'] = 'nosniff'
-
-            return response
-        if post_id in liked_posts:
             liked_posts.remove(post_id)
             users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
             post = post_collection.find_one({'id': post_id})
