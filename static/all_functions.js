@@ -12,6 +12,10 @@ function welcome() { //might need modification in future, is this even needed?
     setInterval(current_post_listen, 5000);
 }
 
+function listen(){
+    document.getElementById("login").innerHTML += "<br/><br/><br/><br/><br/>This text was added by JavaScript 😀";
+}
+
 //we need available_posts_listen() can be done later
 
 //we need  current_post_listen() which will send get request

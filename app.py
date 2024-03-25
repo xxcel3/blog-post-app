@@ -74,13 +74,27 @@ def index():
                 for post_info in posts_info:
                     post_info['postid'] = str(post_info['id']) 
 
-                return render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser, ) #add parameters to replace the html contents
+                response = make_response(render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser, )) #add parameters to replace the html contents
+                response.headers['X-Content-Type-Options'] = 'nosniff'
+
+                return response
+        else:
+            reg_error = request.args.get('reg_error')
+            reg_success = request.args.get('reg_success')
+            login_error = request.args.get('login_error')
+            response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error))
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+
+            return response
     # otherwise user must login
     else:  
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
         login_error = request.args.get('login_error')
-        return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
+        response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+
+        return response
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -116,9 +130,15 @@ def login():
 
     user = users_collection.find_one({'username': username})
     if not user or not bcrypt.checkpw(password.encode(), user['password'].encode()):
-        return redirect(url_for('index', login_error="Invalid username or password"))
+        response = make_response(redirect(url_for('index', login_error="Invalid username or password")))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+
+        return response
     elif not (username and password):
-        return redirect(url_for('index', login_error="Please fill in all necessary fields"))
+        response = make_response(redirect(url_for('index', login_error="Please fill in all necessary fields")))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+
+        return response
     else:
         # generate authentication token
         token = str(uuid.uuid4())
@@ -174,7 +194,10 @@ def add_new_post_after_submit():
     #inserting newly created post to db
     post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes})
 
-    return redirect('/') #hopefully frontpage will now show the new created post
+    response = make_response(redirect('/')) #hopefully frontpage will now show the new created post
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+
+    return response
 
 # Where we get messages from DB
 @app.route('/id/chat-message', methods=['GET','POST'])
@@ -243,7 +266,10 @@ def addNewPost():
         userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
         
         currAuthUser = userInfo[0]["username"]
-        return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
+        response = make_response(render_template('newpost.html', Username=currAuthUser)) #html that will have basic fields of input for user  
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+
+        return response
 
 #method below needs work, not finished
 #have this request include query string with the postID in which its coming from(might need to create/alter js)
@@ -258,8 +284,10 @@ def displaySpecificPost():
     #then alter ajax js too notify back end we only want chats tied with that postID
 
 
-    return render_template('post.html', Username=currAuthUser)
+    response = make_response(render_template('post.html', Username=currAuthUser))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
 
+    return response
 
 # Add route for recording likes
 @app.route('/record-like', methods=['POST'])
@@ -275,7 +303,10 @@ def record_like():
         liked_posts = user_info.get('liked_posts', [])
         if post_id in liked_posts:
             # redirect the user to another page or display an error message
-            return make_response(redirect("/"))
+            response = make_response(redirect("/"))
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+
+            return response
 
     # update the database to increment the likes for the post with postId
     post = post_collection.find_one({'id': post_id})
@@ -307,7 +338,10 @@ def record_dislike():
         disliked_posts = user_info.get('disliked_posts', [])
 
         if post_id in disliked_posts:
-            return make_response(redirect("/"))
+            response = make_response(redirect("/"))
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+
+            return response
         if post_id in liked_posts:
             liked_posts.remove(post_id)
             users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
