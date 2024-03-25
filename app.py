@@ -207,7 +207,7 @@ def getMessages():
         data = request.json
         message = html.escape(data["message"])
 
-        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from
+        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from with its postID
 
         response = make_response("", 200)   
         response.headers['X-Content-Type-Options'] = 'nosniff'
