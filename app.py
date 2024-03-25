@@ -75,10 +75,7 @@ def index():
     else:  
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
-        reg_error = request.args.get('reg_error')
-        reg_success = request.args.get('reg_success')
         login_error = request.args.get('login_error')
-        return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
         return render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error)
 
 @app.route('/register', methods=['POST'])
@@ -91,12 +88,9 @@ def register():
     if existing_user:
         # redirect to homepage with an error message
         response = make_response(redirect(url_for('index', reg_error="Username is already taken. Please choose a different one.")))
-        response = make_response(redirect(url_for('index', reg_error="Username is already taken. Please choose a different one.")))
     elif not (username and password and confirm_password):
         response = make_response(redirect(url_for('index', reg_error="Please fill in all necessary fields")))
-        response = make_response(redirect(url_for('index', reg_error="Please fill in all necessary fields")))
     elif password != confirm_password:
-        response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
         response = make_response(redirect(url_for('index', reg_error="Passwords don't match")))
     else:
         # salt and hash the password
@@ -108,7 +102,6 @@ def register():
 
         # redirect to homepage 
                
-        response = make_response(redirect(url_for('index', reg_success="Registration successfull")))
         response = make_response(redirect(url_for('index', reg_success="Registration successfull")))
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
