@@ -178,7 +178,8 @@ def add_new_post_after_submit():
 def getMessages():
     if request.method == 'GET':    
         #all the messages from the chat collection of the DB
-        allMessages = post1_chat_collection.find({}) #later can find chat message for specified post
+        #we are going to want to find all chat messages that contains the appropriate postID from the given request and serve those
+        allMessages = post1_chat_collection.find({}) 
 
         chats = []
         for message in allMessages:
@@ -199,7 +200,7 @@ def getMessages():
         data = request.json
         message = html.escape(data["message"])
 
-        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from
+        post1_chat_collection.insert_one({"message": message, "username": f"{currAuthUser}", "id": id}) #later include what post the chat came from with its postID
 
         response = make_response("", 200)   
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -242,13 +243,80 @@ def addNewPost():
         return render_template('newpost.html', Username=currAuthUser) #html that will have basic fields of input for user  
         
 
+
 #method below needs work, not finished
+#have this request include query string with the postID in which its coming from(might need to create/alter js)
 @app.route('/id', methods=['GET']) #gets redirected here to /id after clicking on the first post that is in the loggedin.html
 def displaySpecificPost():
-    #when js creates GET /id request, itll come from /frontpage after clicking on an existing post, 
-    #which should have a unique id to it that every chat message has so we can find only the specific chat messages needed
+    authToken = request.cookies.get("auth_token")
+    hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
+    userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))
+    currAuthUser = userInfo[0]["username"]
 
-    return render_template('post.html')
+    #based on query string values that has postID, some how let the html update this somehow, 
+    #then alter ajax js too notify back end we only want chats tied with that postID
+
+
+    return render_template('post.html', Username=currAuthUser)
+
+
+# Add route for recording likes
+@app.route('/record-like', methods=['POST'])
+def record_like():
+    data = request.json
+    post_id = data.get('id')
+
+    # Get the liked posts from the user's cookie
+    liked_posts = request.cookies.get('liked_posts')
+    if liked_posts:
+        liked_posts = liked_posts.split(',')
+    else:
+        liked_posts = []
+
+    # Check if the user has already liked the post
+    if post_id in liked_posts:
+        # User has already liked the post
+        # redirect the user to another page or display an error message
+        return make_response(redirect("/"))
+
+    # Update the database to increment the likes for the post with postId
+    post_collection.update_one({'id': post_id}, {'$inc': {'likes': 1}})
+
+    # Add the post_id to the liked_posts cookie
+    liked_posts.append(post_id)
+    response = make_response(redirect("/"))
+    response.set_cookie('liked_posts', ','.join(liked_posts))
+
+    return response
+
+# Add route for recording dislikes
+@app.route('/record-dislike', methods=['POST'])
+def record_dislike():
+    data = request.json
+    post_id = data.get('id')
+
+    # Get the liked posts from the user's cookie
+    liked_posts = request.cookies.get('liked_posts')
+    if liked_posts:
+        liked_posts = liked_posts.split(',')
+    else:
+        liked_posts = []
+
+    # Check if the user has already liked the post
+    if post_id in liked_posts:
+        # User has already liked the post
+        # redirect the user to another page or display an error message
+        return make_response(redirect("/"))
+
+    # Update the database to decrement the likes for the post with postId
+    post_collection.update_one({'id': post_id}, {'$inc': {'likes': -1}})
+
+    # Add the post_id to the liked_posts cookie
+    liked_posts.append(post_id)
+    response = make_response(redirect("/"))
+    response.set_cookie('liked_posts', ','.join(liked_posts))
+
+    return response
 
 # needs to be 8080
 if __name__ == '__main__':
