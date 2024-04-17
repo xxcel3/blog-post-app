@@ -6,6 +6,7 @@ import json
 import html
 import bcrypt
 import hashlib
+import os
 from datetime import datetime, timedelta, timezone
 
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
@@ -40,6 +41,10 @@ def serve_images(filename):
         response.headers['Content-Type'] = 'image/png'
     elif filename.endswith('.jpg') or filename.endswith('.jpeg'):
         response.headers['Content-Type'] = 'image/jpeg'
+    elif filename.endswith('.gif'):
+        response.headers['Content-Type'] = 'image/gif'
+    elif filename.endswith('.mp4'):
+        response.headers['Content-Type'] = 'video/mp4'
     return response
 
 @app.route('/')
@@ -62,6 +67,8 @@ def index():
                     "time": {"$exists": True},
                     "likes": {"$exists": True},
                     "id": {"$exists": True},
+                    "image_message": {"$exists": True},
+                    "video_message" : {"$exists": True}
                 }
 
                 posts_info = list(post_collection.find(query))
@@ -74,7 +81,7 @@ def index():
                 for post_info in posts_info:
                     post_info['postid'] = str(post_info['id']) 
 
-                response = make_response(render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser, )) #add parameters to replace the html contents
+                response = make_response(render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser)) #add parameters to replace the html contents
                 response.headers['X-Content-Type-Options'] = 'nosniff'
 
                 return response
@@ -175,6 +182,25 @@ def add_new_post_after_submit():
     post_title = html.escape(request.form.get('post-title'))
     post_description = html.escape(request.form.get('post-description'))
 
+    image_message = None
+    video_message = None
+    # updated here for image
+    if 'file' in request.files and request.files['file'].filename != '':
+        file = request.files['file']
+        if file.mimetype.startswith('image'):
+            # Handle image upload
+            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+            image_path = os.path.join('static/images', filename)
+            file.save(image_path)
+            image_message = "/" + image_path
+        elif file.mimetype.startswith('video'):
+            # Handle video upload
+            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+            video_path = os.path.join('static/images', filename)
+            file.save(video_path)
+            video_message = "/" + video_path
+
+
     #keep track of creation time
     current_time = datetime.now()
     offset = timedelta(hours=-4)
@@ -193,7 +219,17 @@ def add_new_post_after_submit():
     likes = "0"
         
     #inserting newly created post to db
-    post_collection.insert_one({"id":id, "username": currAuthUser, "postTitle": post_title, "postDesc":post_description, "time":formatted_time, "likes":likes})
+    post = {
+        "id":id,
+        "username": currAuthUser,
+        "postTitle": post_title,
+        "postDesc": post_description,
+        "time":formatted_time, 
+        "likes":likes,
+        "image_message": image_message,
+        "video_message" : video_message  
+    }
+    post_collection.insert_one(post)
 
     response = make_response(redirect('/')) #hopefully frontpage will now show the new created post
     response.headers['X-Content-Type-Options'] = 'nosniff'
