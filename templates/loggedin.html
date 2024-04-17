@@ -34,8 +34,22 @@
                     <h2 class="post-title">{{postInfo.postTitle}}</h2>
                     <h3 class="post-info">Posted by {{postInfo.username}}, on {{postInfo.time}}</h3>
                     <h3 class="post-likes">Likes: <span class="like-count">{{postInfo.likes}}</span></h3>
-                    <!-- <h4 class="post-dislikes">Dislikes: {{postInfo.dislikes}}</h4> -->
+                    
+                    <!-- if there is image -->
+                    
+                    {% if postInfo.image_message %}
+                        <img src="{{ postInfo.image_message }}" alt="Post Image" class="post-image">
+                    {% endif %}
 
+                    <!-- if there is video -->
+
+                    {% if postInfo.video_message %}
+                        <video width="320" height="240" controls>
+                            <source src="{{ postInfo.video_message }}" type="video/mp4" class="post-video">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% endif %}
+                    
                     <div class="like-dislike">
                         <form action="/record-like" method="post">
                             <!-- Assign the postid specific to the post -->

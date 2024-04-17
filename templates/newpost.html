@@ -16,12 +16,15 @@
             <h1>Create New Post</h1>
         </div>
         <div class="new-post-form">
-            <form id="post-form" action="/submitNewPost" method="post" enctype="application/x-www-form-urlencoded">
+            <form id="post-form" action="/submitNewPost" method="post" enctype="multipart/form-data">
                 <label for="post-title">Title:</label><br>
                 <input type="text" id="post-title" name="post-title"><br>
 
                 <label for="post-description">Description:</label><br>
                 <textarea id="post-description" name="post-description" rows="4" cols="50"></textarea><br>
+
+                <label for="post-file">Upload Image, GIF, Video:</label><br>
+                <input type="file" id="post-file" name="file" accept="image/*, video/*"><br>
 
                 <input type="submit" value="Submit">
             </form>
