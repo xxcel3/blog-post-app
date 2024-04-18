@@ -187,18 +187,25 @@ def add_new_post_after_submit():
     # updated here for image
     if 'file' in request.files and request.files['file'].filename != '':
         file = request.files['file']
+        filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1] 
+        file_path = os.path.join('static/images', filename)
+        file.save(file_path)
         if file.mimetype.startswith('image'):
             # Handle image upload
-            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
-            image_path = os.path.join('static/images', filename)
-            file.save(image_path)
-            image_message = "/" + image_path
+            # image_message = {
+            #     "filename": filename,
+            #     "filetype": "image"
+            # }
+            # image_message =  "/" + file_path
+            message = f'<img src="static/images/{filename}" alt="Uploaded Image JPEG">'
+            content_type = 'image/jpeg'
+            
+            # image_message = "/" + image_path
         elif file.mimetype.startswith('video'):
             # Handle video upload
-            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
-            video_path = os.path.join('static/images', filename)
-            file.save(video_path)
-            video_message = "/" + video_path
+            # video_message = "/" + file_path
+            message = f'<video width="400" controls autoplay muted><source src="public/images/{filename}" type="video/mp4"></video>'
+            content_type = 'video/mp4'
 
 
     #keep track of creation time
@@ -226,13 +233,17 @@ def add_new_post_after_submit():
         "postDesc": post_description,
         "time":formatted_time, 
         "likes":likes,
-        "image_message": image_message,
-        "video_message" : video_message  
+        "file_name": filename,
+        "message": message
+        # "image_message": image_message,
+        # "video_message" : video_message  
+
     }
     post_collection.insert_one(post)
 
     response = make_response(redirect('/')) #hopefully frontpage will now show the new created post
     response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.content_type = content_type
 
     return response
 
