@@ -11,6 +11,14 @@ from datetime import datetime, timedelta, timezone
 
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
+def remove_slashes(path):
+    path_list = path.split("/")
+    final_path = ""
+    for p in path_list:
+        final_path += p
+    return final_path
+    
+
 app = Flask(__name__)
 # app.config['SECRET_KEY'] = 'your_secret_key'
 # app.config['MONGO_URI'] = 'mongodb://localhost:27017/users'
@@ -23,6 +31,7 @@ post_collection = db["posts"] # every post should keep track of user who posted 
 
 @app.route('/static/<filename>')
 def serve_static(filename):
+    filename = remove_slashes(filename)
     response = send_from_directory('static', filename)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     # mime types
@@ -34,6 +43,7 @@ def serve_static(filename):
 
 @app.route('/static/images/<filename>')
 def serve_images(filename):
+    filename = remove_slashes(filename)
     response = send_from_directory('static/images', filename)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     # mime types
