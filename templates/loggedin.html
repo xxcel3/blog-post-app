@@ -67,7 +67,23 @@
 
             {% endfor %}
         </div>
+        <ul id="userlist">User List</ul>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+        <script>
+            const socket = io.connect('http://' + document.domain + ':' + location.port);
     
+            socket.on('userlist', function(users) {
+                const userlist = document.getElementById("userlist");
+                userlist.innerHTML = "";
+                users.forEach(function(user) {
+                    const li = document.createElement("li");
+                    li.textContent = user;
+                    userlist.appendChild(li);
+                });
+            });
+    
+        </script>
     </div>
     
     <script src="../static/all_functions.js"></script>

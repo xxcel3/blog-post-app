@@ -8,10 +8,12 @@ import bcrypt
 import hashlib
 import os
 from datetime import datetime, timedelta, timezone
+from flask_socketio import SocketIO, emit
 
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 # app.config['SECRET_KEY'] = 'your_secret_key'
 # app.config['MONGO_URI'] = 'mongodb://localhost:27017/users'
 mongo_client = MongoClient("mongo", 27017)
@@ -20,6 +22,9 @@ users_collection = db['users']
 
 post1_chat_collection = db["post1_chat"] # we need to find a way to create unique chat collections per unique posts
 post_collection = db["posts"] # every post should keep track of user who posted and time of post creation, maybe number of current likes(might have to use ajax to update this)
+
+authenticated_user_list = set()
+
 
 @app.route('/static/<filename>')
 def serve_static(filename):
@@ -387,6 +392,34 @@ def record_unlike():
 
     return response
 
+@socketio.on('connect')
+def handle_connect():
+    # When a client connects, add them to the list of authenticated users
+    # authenticated_user_list.add(request.sid)
+    auth_token = request.cookies.get('auth_token', None)
+    # if alr logged in
+    if auth_token:
+        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+        user = users_collection.find_one({"auth_token": hashed_auth_token})
+        if user:
+            authenticated_user_list.add(user['username'])
+    emit('userlist', list(authenticated_user_list), broadcast=True)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    # When a client disconnects, remove them from the list of authenticated users
+
+    
+    auth_token = request.cookies.get('auth_token', None)
+    # if alr logged in
+    if auth_token:
+        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+        user = users_collection.find_one({"auth_token": hashed_auth_token})
+        if user:
+            authenticated_user_list.remove(user['username'])
+
+    emit('userlist', list(authenticated_user_list), broadcast=True)
+
 # needs to be 8080
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True, port=8080)
+    socketio.run(app, host="0.0.0.0", debug=True, port=8080, allow_unsafe_werkzeug=True)
