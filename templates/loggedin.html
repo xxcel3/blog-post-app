@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,27 +22,21 @@
             <!-- New Post button, not completed yet -->
             <button class="new-post-button" onclick="newPost()">New Post</button>
             
-            <!--<div class="singular-post" onclick="post_navigate()">Click me</div>> -->
-
-            <!--somehow need to find a way later to dynamically alter the html with new posts here, 
-                with corresponding ids/names which can be used to retrieve a post's respective chats-->
+            <!-- Iterate over postsInfo to display posts -->
             {% for postInfo in postsInfo %}
-
                 <div class="singular-post" onclick="post_navigate()">
-                    <!--classes below could be used for css styling later-->
+                    <!-- Display post information -->
                     <h2 class="post-title">{{postInfo.postTitle}}</h2>
                     <h3 class="post-info">Posted by {{postInfo.username}}, on {{postInfo.time}}</h3>
                     <h3 class="post-desc">Message: {{postInfo.postDesc}}</h3>
                     <h3 class="post-likes">Likes: <span class="like-count">{{postInfo.likes}}</span></h3>
                     
-                    <!-- if there is image -->
-                    
+                    <!-- Display post image if available -->
                     {% if postInfo.image_message %}
                         <img src="{{ postInfo.image_message }}" alt="Post Image" class="post-image">
                     {% endif %}
 
-                    <!-- if there is video -->
-
+                    <!-- Display post video if available -->
                     {% if postInfo.video_message %}
                         <video width="320" height="240" controls>
                             <source src="{{ postInfo.video_message }}" type="video/mp4" class="post-video">
@@ -51,6 +44,7 @@
                         </video>
                     {% endif %}
                     
+                    <!-- Like and Unlike buttons -->
                     <div class="like-dislike">
                         <form action="/record-like" method="post">
                             <!-- Assign the postid specific to the post -->
@@ -64,28 +58,87 @@
                         </form>
                     </div>
                 </div>
-
             {% endfor %}
         </div>
-        <ul id="userlist">User List</ul>
+        
+        <h2>User List</h2>
+        <ul id="userlist"></ul>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
         <script>
             const socket = io.connect('http://' + document.domain + ':' + location.port);
-    
+
+            // Function to display the DM form for a specific user
+            function showDmForm(user) {
+                const existingForms = document.querySelectorAll(`.dm-form-${user}`);
+                existingForms.forEach(form => form.remove());
+                
+                const form = document.createElement("form");
+                form.classList.add("dm-form");
+                form.classList.add(`dm-form-${user}`);
+                form.innerHTML = `
+                    <input type="hidden" name="receiver" value="${user}">
+                    <input type="text" name="message" placeholder="Type your message...">
+                    <button type="submit">Send</button>
+                `;
+                form.addEventListener("submit", function(event) {
+                    event.preventDefault();
+                    const message = form.querySelector("[name='message']").value.trim();
+                    if (message !== "") {
+                        // Send to the server
+                        socket.emit('submit_dm', {receiver: user, message: message });
+                        form.querySelector("[name='message']").value = "";
+                    }
+                });
+
+                const userItem = document.querySelector(`[data-user="${user}"]`);
+                if (userItem) {
+                    userItem.appendChild(form);
+                }
+            }
+
             socket.on('userlist', function(users) {
                 const userlist = document.getElementById("userlist");
                 userlist.innerHTML = "";
                 users.forEach(function(user) {
                     const li = document.createElement("li");
                     li.textContent = user;
+                    li.setAttribute("data-user", user);
                     userlist.appendChild(li);
+                    showDmForm(user);
                 });
             });
-    
+
+            socket.on('sender', function(data) {
+                const receiver = data.receiver;
+                const message = data.message;
+
+                const userItem = document.querySelector(`[data-user="${receiver}"]`);
+                if (userItem) {
+                    const messageItem = document.createElement("li");
+                    messageItem.textContent = message;
+
+                    // append the message under the username
+                    userItem.appendChild(messageItem);
+                }
+            });
+
+            socket.on('receiver', function(data) {
+                const sender = data.sender;
+                const message = data.message;
+
+                const userItem = document.querySelector(`[data-user="${sender}"]`);
+                if (userItem) {
+                    const messageItem = document.createElement("li");
+                    messageItem.textContent = message;
+                    userItem.appendChild(messageItem);
+                }
+            });
+
         </script>
+
+
     </div>
-    
     <script src="../static/all_functions.js"></script>
-    </body>
+</body>
 </html>

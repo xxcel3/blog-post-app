@@ -19,12 +19,12 @@ socketio = SocketIO(app)
 mongo_client = MongoClient("mongo", 27017)
 db = mongo_client["cse312_Group_Project"]
 users_collection = db['users']
+dm_collection = db['direct_messages']
 
 post1_chat_collection = db["post1_chat"] # we need to find a way to create unique chat collections per unique posts
 post_collection = db["posts"] # every post should keep track of user who posted and time of post creation, maybe number of current likes(might have to use ajax to update this)
 
-authenticated_user_list = set()
-
+authenticated_user_list = []
 
 @app.route('/static/<filename>')
 def serve_static(filename):
@@ -392,33 +392,55 @@ def record_unlike():
 
     return response
 
+# socket logic below
 @socketio.on('connect')
 def handle_connect():
-    # When a client connects, add them to the list of authenticated users
-    # authenticated_user_list.add(request.sid)
+    # when a client connects, add them to the list of authenticated users
     auth_token = request.cookies.get('auth_token', None)
-    # if alr logged in
+    # get username
     if auth_token:
         hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
         user = users_collection.find_one({"auth_token": hashed_auth_token})
         if user:
-            authenticated_user_list.add(user['username'])
-    emit('userlist', list(authenticated_user_list), broadcast=True)
+            authenticated_user_list.append({"username":user['username'], "sid":request.sid})
+    usernames = [user['username'] for user in authenticated_user_list]
+    emit('userlist', usernames, broadcast=True)
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    # When a client disconnects, remove them from the list of authenticated users
-
-    
+    # when a client disconnects, remove them from the list of authenticated users
     auth_token = request.cookies.get('auth_token', None)
-    # if alr logged in
     if auth_token:
         hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
         user = users_collection.find_one({"auth_token": hashed_auth_token})
         if user:
-            authenticated_user_list.remove(user['username'])
+            for dict in authenticated_user_list:
+                if dict["username"] == user['username']:
+                    authenticated_user_list.remove(dict)
+                    break
+    usernames = [user['username'] for user in authenticated_user_list]
+    emit('userlist', usernames, broadcast=True)
 
-    emit('userlist', list(authenticated_user_list), broadcast=True)
+@socketio.on('submit_dm')
+def handle_dm(data):
+    for dict in authenticated_user_list:
+        if dict["sid"] == request.sid:
+            sender = dict["username"]
+    receiver = data['receiver']
+    message = sender + " to " + receiver + ": " + data['message'] 
+    
+    print(f"Received DM from {sender} to {receiver}: {message}")
+    
+    dm_collection.insert_one({
+        'message': message
+    })
+    
+    for dict in authenticated_user_list:
+        if dict["username"] == receiver:
+            receiver_sid = dict["sid"]
+    emit('sender', {'receiver': receiver, 'message': message}, room=request.sid)
+    emit('receiver', {'sender': sender, 'message': message}, room=receiver_sid)
 
 # needs to be 8080
 if __name__ == '__main__':
