@@ -17,7 +17,7 @@ def remove_slashes(path):
     for p in path_list:
         final_path += p
     return final_path
-    
+
 
 app = Flask(__name__)
 # app.config['SECRET_KEY'] = 'your_secret_key'
@@ -197,25 +197,18 @@ def add_new_post_after_submit():
     # updated here for image
     if 'file' in request.files and request.files['file'].filename != '':
         file = request.files['file']
-        filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1] 
-        file_path = os.path.join('static/images', filename)
-        file.save(file_path)
         if file.mimetype.startswith('image'):
             # Handle image upload
-            # image_message = {
-            #     "filename": filename,
-            #     "filetype": "image"
-            # }
-            # image_message =  "/" + file_path
-            message = f'<img src="static/images/{filename}" alt="Uploaded Image JPEG">'
-            content_type = 'image/jpeg'
-            
-            # image_message = "/" + image_path
+            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+            image_path = os.path.join('static/images', filename)
+            file.save(image_path)
+            image_message = "/" + image_path
         elif file.mimetype.startswith('video'):
             # Handle video upload
-            # video_message = "/" + file_path
-            message = f'<video width="400" controls autoplay muted><source src="public/images/{filename}" type="video/mp4"></video>'
-            content_type = 'video/mp4'
+            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+            video_path = os.path.join('static/images', filename)
+            file.save(video_path)
+            video_message = "/" + video_path
 
 
     #keep track of creation time
@@ -243,17 +236,13 @@ def add_new_post_after_submit():
         "postDesc": post_description,
         "time":formatted_time, 
         "likes":likes,
-        "file_name": filename,
-        "message": message
-        # "image_message": image_message,
-        # "video_message" : video_message  
-
+        "image_message": image_message,
+        "video_message" : video_message  
     }
     post_collection.insert_one(post)
 
     response = make_response(redirect('/')) #hopefully frontpage will now show the new created post
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.content_type = content_type
 
     return response
 
@@ -386,20 +375,25 @@ def record_like():
 @app.route('/record-unlike', methods=['POST'])
 def record_unlike():
     post_id = request.form.get('postid')
+
     auth_token = request.cookies.get("auth_token")
     hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
     user_info = users_collection.find_one({"auth_token": hashed_auth_token})
+
     if user_info:
     # get the disliked posts from the user's db
         liked_posts = user_info.get('liked_posts', [])
+
         if post_id in liked_posts:
             liked_posts.remove(post_id)
             users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
             post = post_collection.find_one({'id': post_id})
             current_likes = int(post.get('likes', 0))
             post_collection.update_one({'id': post_id}, {'$set': {'likes': current_likes - 1}})
+
     response = make_response(redirect("/"))
     response.headers['X-Content-Type-Options'] = 'nosniff'
+
     return response
 
 # needs to be 8080
