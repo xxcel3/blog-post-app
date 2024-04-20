@@ -395,6 +395,7 @@ def record_unlike():
 # socket logic below
 @socketio.on('connect')
 def handle_connect():
+    username = ''
     # when a client connects, add them to the list of authenticated users
     auth_token = request.cookies.get('auth_token', None)
     # get username
@@ -402,9 +403,22 @@ def handle_connect():
         hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
         user = users_collection.find_one({"auth_token": hashed_auth_token})
         if user:
-            authenticated_user_list.append({"username":user['username'], "sid":request.sid})
+            username = user['username']
+            authenticated_user_list.append({"username":username, "sid":request.sid})
     usernames = [user['username'] for user in authenticated_user_list]
     emit('userlist', usernames, broadcast=True)
+    for dict in authenticated_user_list:
+        receiver = dict["username"]
+        dm_history = dm_collection.find({
+            "$or": [
+                {"sender": username, "receiver": receiver},
+                {"sender": receiver, "receiver": username}
+            ]
+        })
+        # emit DM history
+        for dm in dm_history:
+            emit('sender', {'receiver': receiver, 'message': dm['message']}, room=request.sid)
+            emit('receiver', {'sender': username, 'message': dm['message']}, room=dict['sid'])
 
 
 @socketio.on('disconnect')
@@ -433,6 +447,8 @@ def handle_dm(data):
     print(f"Received DM from {sender} to {receiver}: {message}")
     
     dm_collection.insert_one({
+        'sender' : sender,
+        'receiver' : receiver,
         'message': message
     })
     
