@@ -395,6 +395,7 @@ def record_unlike():
 # socket logic below
 @socketio.on('connect')
 def handle_connect():
+    # for userlist
     username = ''
     # when a client connects, add them to the list of authenticated users
     auth_token = request.cookies.get('auth_token', None)
@@ -407,6 +408,8 @@ def handle_connect():
             authenticated_user_list.append({"username":username, "sid":request.sid})
     usernames = [user['username'] for user in authenticated_user_list]
     emit('userlist', usernames, broadcast=True)
+
+    # for dm history
     for dict in authenticated_user_list:
         receiver = dict["username"]
         dm_history = dm_collection.find({
@@ -418,7 +421,8 @@ def handle_connect():
         # emit DM history
         for dm in dm_history:
             emit('sender', {'receiver': receiver, 'message': dm['message']}, room=request.sid)
-            emit('receiver', {'sender': username, 'message': dm['message']}, room=dict['sid'])
+            if username != receiver:
+                emit('receiver', {'sender': username, 'message': dm['message']}, room=dict['sid'])
 
 
 @socketio.on('disconnect')
@@ -456,7 +460,8 @@ def handle_dm(data):
         if dict["username"] == receiver:
             receiver_sid = dict["sid"]
     emit('sender', {'receiver': receiver, 'message': message}, room=request.sid)
-    emit('receiver', {'sender': sender, 'message': message}, room=receiver_sid)
+    if sender != receiver:
+        emit('receiver', {'sender': sender, 'message': message}, room=receiver_sid)
 
 # needs to be 8080
 if __name__ == '__main__':
