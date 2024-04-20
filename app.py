@@ -63,6 +63,7 @@ def index():
                 
                 query = {
                     "postTitle": {"$exists": True},
+                    "postDesc" : {"$exists": True},
                     "username": {"$exists": True},
                     "time": {"$exists": True},
                     "likes": {"$exists": True},
