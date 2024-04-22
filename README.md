@@ -1,4 +1,3 @@
 # cse312project
 CSE312 project
-part 3 not working yet 
-link -> hobbied.bond
+part 3 link -> hobbied.bond
