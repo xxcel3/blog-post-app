@@ -66,7 +66,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
         <script>
-            const socket = io.connect('http://' + document.domain + ':' + location.port);
+            const socket = io.connect('wss://' + document.domain + ':' + location.port);
 
             // Function to display the DM form for a specific user
             function showDmForm(user) {
