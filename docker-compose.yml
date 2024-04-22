@@ -3,15 +3,15 @@ services:
   nginx:
     build: nginx
     ports:
-      - '80:80'
-      - '443:443'
+      - '60:80'
+      - '550:443'
   mongo:
     image: mongo:4.2.5
     ports:
-      - '27017:27017'
+      - '65015:27017'
   app:
     build: .
     environment:
       WAIT_HOSTS: mongo:27017
     ports:
-      - '8080:8080'
+      - '9090:8080'
