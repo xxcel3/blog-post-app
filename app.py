@@ -13,7 +13,7 @@ from flask_socketio import SocketIO, emit
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, transports=['websocket'])
 # app.config['SECRET_KEY'] = 'your_secret_key'
 # app.config['MONGO_URI'] = 'mongodb://localhost:27017/users'
 mongo_client = MongoClient("mongo", 27017)

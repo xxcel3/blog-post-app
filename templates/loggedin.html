@@ -69,7 +69,7 @@
         <script>
             //below was previos
             //const socket = io.connect('wss://' + document.domain + ':' + location.port);
-            const socket = io();
+            const socket = io({transports: ['websocket']});
 
             socket.on('connect', () => {
                 console.log('connected');
