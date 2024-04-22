@@ -64,9 +64,16 @@
         <h2>User List</h2>
         <ul id="userlist"></ul>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+        <!--changed from 4.3.2 to 4.2.0-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
         <script>
-            const socket = io.connect('wss://' + document.domain + ':' + location.port);
+            //below was previos
+            //const socket = io.connect('wss://' + document.domain + ':' + location.port);
+            const socket = io();
+
+            socket.on('connect', () => {
+                console.log('connected');
+            });
 
             // Function to display the DM form for a specific user
             function showDmForm(user) {
