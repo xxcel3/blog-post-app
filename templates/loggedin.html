@@ -64,12 +64,12 @@
         <h2>User List</h2>
         <ul id="userlist"></ul>
 
-        <!--changed from 4.3.2 to 4.2.0-->
+        <!--changed from 4.3.2 to 4.2.0 -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
         <script>
             //below was previos
-            //const socket = io.connect('wss://' + document.domain + ':' + location.port);
-            const socket = io();
+            const socket = io.connect('wss://' + window.location.host);
+            //const socket = io();
 
             socket.on('connect', () => {
                 console.log('connected');
@@ -143,8 +143,6 @@
             });
 
         </script>
-
-
     </div>
     <script src="../static/all_functions.js"></script>
 </body>
