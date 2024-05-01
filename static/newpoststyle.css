@@ -2,18 +2,6 @@ body, input, textarea, button {
     font-family: 'Poppins', sans-serif;
 }
 
-/* Style the black box */
-#black-box {
-    background-color: black;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 999;
-    width: 100%;
-    height: 50px;
-}
-
-/* Style the username holder */
 #username-holder {
     color: white;
     align-items: center;
@@ -22,38 +10,54 @@ body, input, textarea, button {
     padding-top: 13px;
 }
 
-/* Style the posts container */
-#posts {
+
+#black-box {
     background-color: black;
-    height: 670px;
-    width: 1080px;
-    margin-top: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center; 
+}
+
+
+#posts {
+    background-color: darkblue;
+    height: calc(100vh - 50px); 
+    width: 100%;
     opacity: 0.97;
-    padding-left: 100px;
-    padding-top: 50px;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center; 
     box-sizing: border-box;
 }
 
-/* Style the post header */
+
 #post-header {
     color: white;
+    margin-bottom: 20px; /
 }
 
-/* Style the new post form */
+
 .new-post-form {
-    margin-top: 20px;
     padding: 20px;
     background-color: #f7f7f7;
     border-radius: 10px;
     box-sizing: border-box;
+    width: 70%;
+    max-width: 500px; 
 }
 
-/* Style the form labels */
+
 label {
     font-weight: bold;
 }
 
-/* Style the form inputs and textarea */
+
 input[type="text"],
 textarea {
     width: 100%;
@@ -65,17 +69,3 @@ textarea {
     box-sizing: border-box;
 }
 
-/* Style the submit button */
-.new-post-button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.new-post-button:hover {
-    background-color: #45a049;
-}
