@@ -54,6 +54,7 @@
     background-color: #f7f7f7;
     margin-bottom: 20px;
     box-sizing: border-box;
+    overflow-x: scroll;
     position: relative;
   }
 
