@@ -33,17 +33,19 @@
                     <h3 class="post-likes">Likes: <span class="like-count">{{postInfo.likes}}</span></h3>
                     
                     <!-- Display post image if available -->
-                    {% if postInfo.image_message %}
+                    <div id="image-fix">
+                        {% if postInfo.image_message %}
                         <img src="{{ postInfo.image_message }}" alt="Post Image" class="post-image">
-                    {% endif %}
-
-                    <!-- Display post video if available -->
-                    {% if postInfo.video_message %}
-                        <video width="320" height="240" controls>
+                        {% endif %}
+                    </div>
+                     <div id="video-fix">
+                        {% if postInfo.video_message %}
+                        <video width="20" height="20" controls>
                             <source src="{{ postInfo.video_message }}" type="video/mp4" class="post-video">
                             Your browser does not support the video tag.
                         </video>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 
                     <!-- Like and Unlike buttons -->
                     <div class="like-dislike">
