@@ -9,7 +9,6 @@ import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 from flask_socketio import SocketIO, emit
-import websockets
 
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
@@ -163,7 +162,7 @@ def login():
 
         # set authentication token as HttpOnly cookie
         response = make_response(redirect("/"))
-        response.set_cookie('auth_token', token, httponly=True, expires=datetime.now() + timedelta(hours=1))
+        response.set_cookie('auth_token', token, httponly=True, secure=True, expires=datetime.now() + timedelta(hours=1))
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
         return response
@@ -234,7 +233,7 @@ def add_new_post_after_submit():
         "time":formatted_time, 
         "likes":likes,
         "image_message": image_message,
-        "video_message" : video_message  
+        "video_message" : video_message
     }
     post_collection.insert_one(post)
 
@@ -276,29 +275,6 @@ def getMessages():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
-#can maybe add ajax to listen for new posts to not have to refresh
-# @app.route('/frontpage', methods=['GET']) #gets redirected here after successfully logging in
-# def displayLoginHomepage():
-#     authToken = request.cookies.get("auth_token")
-#     hashed_auth_token = hashlib.md5(authToken.encode()).hexdigest()
-#     userInfo = list(users_collection.find({"auth_token": f"{hashed_auth_token}"}))  
-#     currAuthUser = userInfo[0]["username"]
-    
-#     query = {
-#         "postTitle": {"$exists": True},
-#         "username": {"$exists": True},
-#         "time": {"$exists": True},
-#         "likes": {"$exists": True},
-#     }
-
-#     posts_info = list(post_collection.find(query))
-
-#     #example below is just hardcoded
-#     #posts_info = [{"postTitle":"title1", "time":"3-24-2024 12:00:00", "likes": "0"},
-#     #              {"postTitle":"title2", "time":"3-25-2024 15:05:02", "likes": "10"},
-#     #              {"postTitle":"title3", "time":"3-20-2024 18:30:45", "likes": "5"}] 
-
-#     return render_template('loggedin.html', postsInfo= posts_info, Username = currAuthUser) #add parameters to replace the html contents
 
 #maybe error handling when creating a post (ex. can post with empty title/description)
 @app.route('/newPost', methods=['GET','POST']) #gets redirected here after successfully logging in
@@ -359,7 +335,7 @@ def record_like():
     
     post_collection.update_one({'id': post_id}, {'$set': {'likes': current_likes + 1}})
 
-    # Add the post_id to the liked_posts user's db
+    # add the post_id to the liked_posts user's db
     liked_posts.append(post_id)
     users_collection.update_one({"auth_token": hashed_auth_token}, {"$set": {"liked_posts": liked_posts}})
 

@@ -6,6 +6,7 @@
     <title>Hobbied</title>
     <link rel="shortcut icon" type="image/png" href="../static/images/icon.png">
     <link rel="stylesheet" type="text/css" href="../static/loggedinstyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-VKXo9Aq+OHEITVZHv2nW5/efc/ClfXpUf+YfTFJvHpzKC+hrjlZ2jpzUV2gSLvWK" crossorigin="anonymous">
 </head>
 <body onload="available_posts_listen()">
     <div class="wrapper">
@@ -43,25 +44,31 @@
                             Your browser does not support the video tag.
                         </video>
                     {% endif %}
-                    
+                
                     <!-- Like and Unlike buttons -->
                     <div class="like-dislike">
-                        <form action="/record-like" method="post">
+                       
+                       
+                        <form action="/record-like" method="post" onsubmit="showLikedMessage()">
                             <!-- Assign the postid specific to the post -->
                             <input type="hidden" name="postid" value="{{ postInfo.postid }}">
+                            <span id="like-message" class="emoji" style="display: none;">&#x1F44D;</span>
                             <button type="submit" class="like-button">Like</button>
                         </form>
-                        <form action="/record-unlike" method="post">
+                        
+                        <form action="/record-unlike" method="post" onsubmit="showUnlikedMessage()">
                             <!-- Assign the postid specific to the post -->
                             <input type="hidden" name="postid" value="{{ postInfo.postid }}">
-                            <button type="submit" class="dislike-button">Unlike</button>
+                            <span id="unlike-message" class="emoji" style="display: none;">&#x1F44E;</span>
+                            <button type="submit" class="dislike-button">Undo Like</button>
                         </form>
+                       
                     </div>
                 </div>
             {% endfor %}
         </div>
-        
-        <h2>User List</h2>
+        <div class="user-list" id="user-list">
+            <h2>&#10024;User List&#10024;</h2>
         <ul id="userlist"></ul>
 
         <!--changed from 4.3.2 to 4.2.0 -->
@@ -143,6 +150,8 @@
             });
 
         </script>
+        </div>
+        
     </div>
     <script src="../static/all_functions.js"></script>
 </body>

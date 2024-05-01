@@ -91,3 +91,12 @@ function submitNewPost() {
 }
 // https://medium.com/swlh/javascript-how-to-create-a-like-button-3716c33b1879
 
+function showLikedMessage() {
+    document.getElementById("like-message").style.display = "inline";
+    document.getElementById("unlike-message").style.display = "none";
+}
+
+function showUnlikedMessage() {
+    document.getElementById("like-message").style.display = "none";
+    document.getElementById("unlike-message").style.display = "inline";
+}
