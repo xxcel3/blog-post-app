@@ -67,94 +67,90 @@
                 </div>
             {% endfor %}
         </div>
-<<<<<<< HEAD
+
         <div class="user-list" id="user-list">
             <h2>&#10024;User List&#10024;</h2>
-=======
-        
-        <h2>User List &#128525;</h2>
->>>>>>> 1630b7758ad1ec34058a0c3a6b4d0eb22b4619bc
-        <ul id="userlist"></ul>
+            <ul id="userlist"></ul>
 
-        <!--changed from 4.3.2 to 4.2.0 -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-        <script>
-            //below was previos
-            const socket = io.connect('wss://' + window.location.host);
-            //const socket = io();
+            <!--changed from 4.3.2 to 4.2.0 -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+            <script>
+                //below was previos
+                const socket = io.connect('wss://' + window.location.host);
+                //const socket = io();
 
-            socket.on('connect', () => {
-                console.log('connected');
-            });
+                socket.on('connect', () => {
+                    console.log('connected');
+                });
 
-            // Function to display the DM form for a specific user
-            function showDmForm(user) {
-                const existingForms = document.querySelectorAll(`.dm-form-${user}`);
-                existingForms.forEach(form => form.remove());
-                
-                const form = document.createElement("form");
-                form.classList.add("dm-form");
-                form.classList.add(`dm-form-${user}`);
-                form.innerHTML = `
-                    <input type="hidden" name="receiver" value="${user}">
-                    <input type="text" name="message" placeholder="Type your message...">
-                    <button type="submit">Send</button>
-                `;
-                form.addEventListener("submit", function(event) {
-                    event.preventDefault();
-                    const message = form.querySelector("[name='message']").value.trim();
-                    if (message !== "") {
-                        // Send to the server
-                        socket.emit('submit_dm', {receiver: user, message: message });
-                        form.querySelector("[name='message']").value = "";
+                // Function to display the DM form for a specific user
+                function showDmForm(user) {
+                    const existingForms = document.querySelectorAll(`.dm-form-${user}`);
+                    existingForms.forEach(form => form.remove());
+                    
+                    const form = document.createElement("form");
+                    form.classList.add("dm-form");
+                    form.classList.add(`dm-form-${user}`);
+                    form.innerHTML = `
+                        <input type="hidden" name="receiver" value="${user}">
+                        <input type="text" name="message" placeholder="Type your message...">
+                        <button type="submit">Send</button>
+                    `;
+                    form.addEventListener("submit", function(event) {
+                        event.preventDefault();
+                        const message = form.querySelector("[name='message']").value.trim();
+                        if (message !== "") {
+                            // Send to the server
+                            socket.emit('submit_dm', {receiver: user, message: message });
+                            form.querySelector("[name='message']").value = "";
+                        }
+                    });
+
+                    const userItem = document.querySelector(`[data-user="${user}"]`);
+                    if (userItem) {
+                        userItem.appendChild(form);
+                    }
+                }
+
+                socket.on('userlist', function(users) {
+                    const userlist = document.getElementById("userlist");
+                    userlist.innerHTML = "";
+                    users.forEach(function(user) {
+                        const li = document.createElement("li");
+                        li.textContent = user;
+                        li.setAttribute("data-user", user);
+                        userlist.appendChild(li);
+                        showDmForm(user);
+                    });
+                });
+
+                socket.on('sender', function(data) {
+                    const receiver = data.receiver;
+                    const message = data.message;
+
+                    const userItem = document.querySelector(`[data-user="${receiver}"]`);
+                    if (userItem) {
+                        const messageItem = document.createElement("li");
+                        messageItem.textContent = message;
+
+                        // append the message under the username
+                        userItem.appendChild(messageItem);
                     }
                 });
 
-                const userItem = document.querySelector(`[data-user="${user}"]`);
-                if (userItem) {
-                    userItem.appendChild(form);
-                }
-            }
+                socket.on('receiver', function(data) {
+                    const sender = data.sender;
+                    const message = data.message;
 
-            socket.on('userlist', function(users) {
-                const userlist = document.getElementById("userlist");
-                userlist.innerHTML = "";
-                users.forEach(function(user) {
-                    const li = document.createElement("li");
-                    li.textContent = user;
-                    li.setAttribute("data-user", user);
-                    userlist.appendChild(li);
-                    showDmForm(user);
+                    const userItem = document.querySelector(`[data-user="${sender}"]`);
+                    if (userItem) {
+                        const messageItem = document.createElement("li");
+                        messageItem.textContent = message;
+                        userItem.appendChild(messageItem);
+                    }
                 });
-            });
 
-            socket.on('sender', function(data) {
-                const receiver = data.receiver;
-                const message = data.message;
-
-                const userItem = document.querySelector(`[data-user="${receiver}"]`);
-                if (userItem) {
-                    const messageItem = document.createElement("li");
-                    messageItem.textContent = message;
-
-                    // append the message under the username
-                    userItem.appendChild(messageItem);
-                }
-            });
-
-            socket.on('receiver', function(data) {
-                const sender = data.sender;
-                const message = data.message;
-
-                const userItem = document.querySelector(`[data-user="${sender}"]`);
-                if (userItem) {
-                    const messageItem = document.createElement("li");
-                    messageItem.textContent = message;
-                    userItem.appendChild(messageItem);
-                }
-            });
-
-        </script>
+            </script>
         </div>
         
     </div>
