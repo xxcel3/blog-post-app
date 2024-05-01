@@ -51,14 +51,14 @@
                     <div class="like-dislike">
                        
                        
-                        <form action="/record-like" method="post" onsubmit="showLikedMessage()">
+                        <form action="/record-like" method="post" onsubmit="showLikedMessage()" id="like-form">
                             <!-- Assign the postid specific to the post -->
                             <input type="hidden" name="postid" value="{{ postInfo.postid }}">
                             <span id="like-message" class="emoji" style="display: none;">&#x1F44D;</span>
                             <button type="submit" class="like-button">Like</button>
                         </form>
                         
-                        <form action="/record-unlike" method="post" onsubmit="showUnlikedMessage()">
+                        <form action="/record-unlike" method="post" onsubmit="showUnlikedMessage()" id="undo-like-form">
                             <!-- Assign the postid specific to the post -->
                             <input type="hidden" name="postid" value="{{ postInfo.postid }}">
                             <span id="unlike-message" class="emoji" style="display: none;">&#x1F44E;</span>

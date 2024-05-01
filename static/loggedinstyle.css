@@ -63,6 +63,14 @@
     opacity: 0.50;
   }
 
+  #like-form {
+    z-index: 6;
+  }
+
+  #undo-like-form {
+    z-index: 6;
+  }
+
   .cont {
     display: flex;
     justify-content: space-around;
@@ -102,6 +110,7 @@
   position: absolute;
   display: flex;
   top: 0px;
+  z-index: -2;
   padding-left: 550px;
   float:right;
 }
@@ -111,6 +120,7 @@
   height: 180px;
   position: absolute;
   top: 0px;
+  z-index: -2;
   padding-left: 550px;
   float:right;
 }
