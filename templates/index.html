@@ -58,8 +58,34 @@
                     <input type="submit" value="Register">                
             </div>
             </form>
+        </div>        
+    </div>
+    
+    <div class="wrapper" id="reset" >
+        <div class="title" id="reset_title"><span>Reset Password</span></div>
+        {% if reset_error %}
+        <p style="color: red;">{{ reset_error }}</p>
+        {% endif %}
+        {% if reset_success %}
+        <p style="color: green;">{{ reset_success }}</p>
+        {% endif %}
+        <form class="forms" id="reset_form" action="/reset" method="post" enctype="application/x-www-form-urlencoded">
+            <div class="row">
+            <label>Username:
+                <input id="reset-form-username" type="text" name="username_reset"/>
+            </label>
+            <br/>
+            <label>Old Password:&nbsp;
+                <input id="reset-form-pass" type="password" name="password_reset">
+            </label>
+            <label>New Password:&nbsp;
+                <input id="reset-form-pass-new" type="password" name="password_reset_new">
+            </label>
+            <br/>
+            <br/>
+            <input type="submit" value="Reset">                
         </div>
-
+        </form>
     </div>
 
     <script src="../static/all_functions.js"></script>

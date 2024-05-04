@@ -13,7 +13,7 @@ function welcome() { //might need modification in future, is this even needed?
 }
 
 function listen(){
-    document.getElementById("login").innerHTML += "<br/><br/><br/><br/><br/>This text was added by JavaScript 😀";
+    document.getElementById("jsadd").innerHTML += "<br/><br/><br/><br/><br/>This text was added by JavaScript 😀";
 }
 
 //we need available_posts_listen() can be done later
