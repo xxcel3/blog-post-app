@@ -95,7 +95,9 @@ def index():
             reg_error = request.args.get('reg_error')
             reg_success = request.args.get('reg_success')
             login_error = request.args.get('login_error')
-            response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error))
+            reset_error = request.args.get('reset_error')
+            reset_success = request.args.get('reset_success')
+            response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error, reset_error=reset_error, reset_success=reset_success))
             response.headers['X-Content-Type-Options'] = 'nosniff'
 
             return response
@@ -104,8 +106,10 @@ def index():
         reg_error = request.args.get('reg_error')
         reg_success = request.args.get('reg_success')
         login_error = request.args.get('login_error')
+        reset_error = request.args.get('reset_error')
+        reset_success = request.args.get('reset_success')
 
-        response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error))
+        response = make_response(render_template('index.html', reg_error=reg_error, reg_success=reg_success, login_error=login_error, reset_error=reset_error, reset_success=reset_success))
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
         return response
@@ -137,6 +141,29 @@ def register():
     response.headers['X-Content-Type-Options'] = 'nosniff'
     return response
 
+@app.route('/reset', methods=['POST'])
+def reset():
+    username = request.form.get('username_reset')
+    old_password = request.form.get('password_reset')
+    new_password = request.form.get('password_reset_new')
+
+    existing_user = users_collection.find_one({'username': username})
+    if existing_user:
+        hashed_password = existing_user.get('password')
+        if bcrypt.checkpw(old_password.encode(), hashed_password.encode()):
+            salt = bcrypt.gensalt()
+            new_hashed_password = bcrypt.hashpw(new_password.encode(), salt).decode()
+            users_collection.update_one({'username': username}, {'$set': {'password': new_hashed_password}})
+            response = make_response(redirect(url_for('index', reset_success="Password reset successfully")))
+            return response
+        else:
+            response = make_response(redirect(url_for('index', reset_error="Incorrect old password")))
+            return response
+    else:
+        response = make_response(redirect(url_for('index', reset_error="User not found")))
+        return response
+
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username_login')
@@ -166,6 +193,8 @@ def login():
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
         return response
+    
+
     
 @app.route('/logout', methods=['POST'])
 def logout():
