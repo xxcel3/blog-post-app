@@ -53,17 +53,11 @@ def rate_limit_reached():
 
 
        # Check if the request count is more than the limit
-       elif request_num >= request_limit and datetime.now() - last_request_time <= window_period:
+       elif request_num > request_limit and datetime.now() - last_request_time <= window_period:
            return True
 
 
-
-
    return False
-
-
-
-
 
 
 # respond to all requests from the IP with a 429 "Too Many Requests" response with a message explaining the issue to the user
