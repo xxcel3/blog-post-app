@@ -24,8 +24,7 @@ time_quiz_collection = db['time_quiz']
 quiz_start_time = None
 quiz_duration = 10
 
-blocked_time = 0
-blocked = False
+blocked_time = datetime(1, 1, 1, 0, 0, 0)
 
 #dictionary to store request counts for each IP address
 ip_request_num = {}
@@ -37,20 +36,17 @@ block_period = timedelta(seconds=30)
 def rate_limit_reached():
    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
    if ip_address in ip_request_num:
-       last_request_time, request_num = ip_request_num[ip_address]
+       last_request_time, request_num, blocked = ip_request_num[ip_address]
        # Check if the block time has passed
        if datetime.now() - last_request_time >= block_period:
            # Unblock the IP address and reset request count
            del ip_request_num[ip_address]
            return False
 
-
-
-
        # Check if the request count is more than the limit
        elif request_num > request_limit and datetime.now() - last_request_time <= window_period:
+           ip_request_num[ip_address][2] = True
            return True
-
 
    return False
 
@@ -58,40 +54,35 @@ def rate_limit_reached():
 # respond to all requests from the IP with a 429 "Too Many Requests" response with a message explaining the issue to the user
 @app.before_request
 def limit_requests():
-   global blocked
-   global blocked_time
+    global blocked_time
+    global ip_request_num
+    ip_address = request.headers.get('X-Real-IP', request.remote_addr)
 
-
-   if blocked:
-       # Check if the block time has passed
-       if datetime.now() - blocked_time >= block_period:
-           # Unblock the IP address and reset request count
-           print(datetime.now)
-           blocked = False
-
-
-   if rate_limit_reached():
-       # IP address has exceeded the rate limit, return 429 response
-       print(ip_request_num)
-       blocked_time = datetime.now()
-       blocked = True
-       return make_response("Too Many Requests", 429)
-
-
-   ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-   if ip_address in ip_request_num:
-       last_request_time, request_num = ip_request_num[ip_address]
+    if ip_address in ip_request_num:
+       last_request_time, request_num, blocked = ip_request_num[ip_address]
        if request_num <= request_limit:
            # Increment the request count for the IP address
-           ip_request_num[ip_address] = (datetime.now(), request_num + 1)
+           ip_request_num[ip_address] = [datetime.now(), request_num + 1, False]
        else:
-           ip_request_num[ip_address] = (last_request_time, request_num + 1)
-   else:
-       # If IP address not in dictionary, add it with request count 1
-       ip_request_num[ip_address] = (datetime.now(), 1)
+           ip_request_num[ip_address] = [last_request_time, request_num + 1, True]
+    else:
+        # If IP address not in dictionary, add it with request count 1
+        ip_request_num[ip_address] = [datetime.now(), 1, False]
 
+    if ip_request_num[ip_address][2] == True:
+        # Check if the block time has passed
+        if datetime.now() - blocked_time >= block_period:
+            # Unblock the IP address and reset request count
+            print(datetime.now)
+            ip_request_num[ip_address][2] = False
 
-   return None
+    if rate_limit_reached():
+        # IP address has exceeded the rate limit, return 429 response
+        print(ip_request_num)
+        blocked_time = datetime.now()
+        return make_response("Too Many Requests", 429)
+
+    return None
 
 
 
