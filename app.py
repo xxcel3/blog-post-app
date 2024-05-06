@@ -11,7 +11,6 @@ from datetime import datetime, timedelta, timezone
 import time
 
 
-# >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
 app = Flask(__name__)
 mongo_client = MongoClient("mongo", 27017)
@@ -24,6 +23,88 @@ time_quiz_collection = db['time_quiz']
 
 quiz_start_time = None
 quiz_duration = 10
+
+blocked_time = 0
+blocked = False
+
+
+
+
+#dictionary to store request counts for each IP address
+ip_request_num = {}
+request_limit = 50
+window_period = timedelta(seconds=10)
+block_period = timedelta(seconds=30)
+
+
+
+
+def rate_limit_reached():
+   ip_address = request.remote_addr
+   if ip_address in ip_request_num:
+       last_request_time, request_num = ip_request_num[ip_address]
+       # Check if the block time has passed
+       if datetime.now() - last_request_time >= block_period:
+           # Unblock the IP address and reset request count
+           del ip_request_num[ip_address]
+           return False
+
+
+
+
+       # Check if the request count is more than the limit
+       elif request_num >= request_limit and datetime.now() - last_request_time <= window_period:
+           return True
+
+
+
+
+   return False
+
+
+
+
+
+
+# respond to all requests from the IP with a 429 "Too Many Requests" response with a message explaining the issue to the user
+@app.before_request
+def limit_requests():
+   global blocked
+   global blocked_time
+
+
+   if blocked:
+       # Check if the block time has passed
+       if datetime.now() - blocked_time >= block_period:
+           # Unblock the IP address and reset request count
+           print(datetime.now)
+           blocked = False
+
+
+   if rate_limit_reached():
+       # IP address has exceeded the rate limit, return 429 response
+       print(ip_request_num)
+       blocked_time = datetime.now()
+       blocked = True
+       return make_response("Too Many Requests", 429)
+
+
+   ip_address = request.remote_addr
+   if ip_address in ip_request_num:
+       last_request_time, request_num = ip_request_num[ip_address]
+       if request_num < 50:
+           # Increment the request count for the IP address
+           ip_request_num[ip_address] = (datetime.now(), request_num + 1)
+       else:
+           ip_request_num[ip_address] = (last_request_time, request_num + 1)
+   else:
+       # If IP address not in dictionary, add it with request count 1
+       ip_request_num[ip_address] = (datetime.now(), 1)
+
+
+   return None
+
+
 
 @app.route('/start_quiz', methods=['POST'])
 def start_quiz():
