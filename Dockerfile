@@ -10,6 +10,8 @@ RUN pip3 install pymongo
 RUN pip3 install Flask --user
 RUN pip install websockets
 
+COPY nginx/cert.pem /etc/nginx/cert.pem
+COPY nginx/private.key /etc/nginx/private.key
 
 EXPOSE 8080
 

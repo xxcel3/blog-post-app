@@ -8,23 +8,121 @@ import bcrypt
 import hashlib
 import os
 from datetime import datetime, timedelta, timezone
-from flask_socketio import SocketIO, emit
+import time
+
 
 # >>>>>>> 21249fd1dcb9d47421bbb0e99b2958b795e1a4db
 
 app = Flask(__name__)
-socketio = SocketIO(app) #transports=['websocket']
-# app.config['SECRET_KEY'] = 'your_secret_key'
-# app.config['MONGO_URI'] = 'mongodb://localhost:27017/users'
 mongo_client = MongoClient("mongo", 27017)
 db = mongo_client["cse312_Group_Project"]
 users_collection = db['users']
 dm_collection = db['direct_messages']
-
 post1_chat_collection = db["post1_chat"] # we need to find a way to create unique chat collections per unique posts
 post_collection = db["posts"] # every post should keep track of user who posted and time of post creation, maybe number of current likes(might have to use ajax to update this)
+time_quiz_collection = db['time_quiz']
 
-authenticated_user_list = []
+quiz_start_time = None
+quiz_duration = 10
+
+@app.route('/start_quiz', methods=['POST'])
+def start_quiz():
+    username = ''
+    auth_token = request.cookies.get('auth_token', None)
+    # get username
+    if auth_token:
+        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+        user = users_collection.find_one({"auth_token": hashed_auth_token})
+        if user:
+            username = user['username']
+    existing_entry = time_quiz_collection.find_one({'username': username})
+    if existing_entry:
+        time_quiz_collection.update_one({'username': username}, {'$set': {'score': 0, 'remaining_time': 0}})
+    else:
+        time_quiz_collection.insert_one({'username': username, 'score': 0, 'remaining_time': 0})
+
+    global quiz_start_time
+    quiz_start_time = time.time()  # start
+    
+    return redirect(url_for('quiz'))
+
+@app.route('/quiz')
+def quiz():
+    global quiz_start_time
+    global quiz_duration
+    
+    if quiz_start_time is None:
+        return redirect(url_for('loggedin.html'))  
+
+    elapsed_time = time.time() - quiz_start_time
+    remaining_time = max(0, quiz_duration - elapsed_time)
+
+    if remaining_time <= 0:
+        return redirect(url_for('leaderboard'))
+    else:
+        return render_template('quiz.html', remaining_time=remaining_time)
+
+@app.route('/remaining_time', methods=['GET'])
+def remaining_time():
+    global quiz_start_time
+    global quiz_duration
+
+    if quiz_start_time is None:
+        return jsonify({'remaining_time': 0})
+
+    elapsed_time = time.time() - quiz_start_time
+    remaining_time = max(0, quiz_duration - elapsed_time)
+    username = ''
+    auth_token = request.cookies.get('auth_token', None)
+
+    if auth_token:
+        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+        user = users_collection.find_one({"auth_token": hashed_auth_token})
+        if user:
+            username = user['username']
+    time_quiz_collection.update_one({'username': username}, {'$set': {'remaining_time': remaining_time}})
+  
+    return jsonify({'remaining_time': float(remaining_time)})
+
+@app.route('/leaderboard', methods=['POST'])
+def leaderboard():
+    username = ''
+    auth_token = request.cookies.get('auth_token', None)
+    # get username
+    if auth_token:
+        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
+        user = users_collection.find_one({"auth_token": hashed_auth_token})
+        if user:
+            username = user['username']
+    
+    score = calculate_score(request.form)  
+    time_quiz_collection.update_one({'username': username}, {'$set': {'score': score}})
+    
+    all_quiz_data = time_quiz_collection.find()
+    quiz_data_list = []
+
+    for quiz_data in all_quiz_data:
+        username = quiz_data.get('username')
+        score = quiz_data.get('score')
+        remaining_time = quiz_data.get('remaining_time')
+        quiz_dict = {
+            'username': username,
+            'score': score,
+            'remaining_time': remaining_time
+        }
+        quiz_data_list.append(quiz_dict)
+
+    return render_template('leaderboard.html', submitted_users=quiz_data_list)
+
+def calculate_score(form_data):
+    score = 0
+    correct_answers = {
+        'question1': 'Jesse'
+    }
+    for question, answer in form_data.items():
+        if question in correct_answers and answer == correct_answers[question]:
+            score += 1  
+    return score
 
 @app.route('/static/<filename>')
 def serve_static(filename):
@@ -398,77 +496,7 @@ def record_unlike():
 
     return response
 
-# socket logic below
-@socketio.on('connect')
-def handle_connect():
-    # for userlist
-    username = ''
-    # when a client connects, add them to the list of authenticated users
-    auth_token = request.cookies.get('auth_token', None)
-    # get username
-    if auth_token:
-        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
-        user = users_collection.find_one({"auth_token": hashed_auth_token})
-        if user:
-            username = user['username']
-            authenticated_user_list.append({"username":username, "sid":request.sid})
-    usernames = [user['username'] for user in authenticated_user_list]
-    emit('userlist', usernames, broadcast=True)
-
-    # for dm history
-    for dict in authenticated_user_list:
-        receiver = dict["username"]
-        dm_history = dm_collection.find({
-            "$or": [
-                {"sender": username, "receiver": receiver},
-                {"sender": receiver, "receiver": username}
-            ]
-        })
-        # emit DM history
-        for dm in dm_history:
-            emit('sender', {'receiver': receiver, 'message': dm['message']}, room=request.sid)
-            if username != receiver:
-                emit('receiver', {'sender': username, 'message': dm['message']}, room=dict['sid'])
-
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    # when a client disconnects, remove them from the list of authenticated users
-    auth_token = request.cookies.get('auth_token', None)
-    if auth_token:
-        hashed_auth_token = hashlib.md5(auth_token.encode()).hexdigest()
-        user = users_collection.find_one({"auth_token": hashed_auth_token})
-        if user:
-            for dict in authenticated_user_list:
-                if dict["username"] == user['username']:
-                    authenticated_user_list.remove(dict)
-                    break
-    usernames = [user['username'] for user in authenticated_user_list]
-    emit('userlist', usernames, broadcast=True)
-
-@socketio.on('submit_dm')
-def handle_dm(data):
-    for dict in authenticated_user_list:
-        if dict["sid"] == request.sid:
-            sender = dict["username"]
-    receiver = data['receiver']
-    message = sender + " to " + receiver + ": " + data['message'] 
-    
-    print(f"Received DM from {sender} to {receiver}: {message}")
-    
-    dm_collection.insert_one({
-        'sender' : sender,
-        'receiver' : receiver,
-        'message': message
-    })
-    
-    for dict in authenticated_user_list:
-        if dict["username"] == receiver:
-            receiver_sid = dict["sid"]
-    emit('sender', {'receiver': receiver, 'message': message}, room=request.sid)
-    if sender != receiver:
-        emit('receiver', {'sender': sender, 'message': message}, room=receiver_sid)
-
 # needs to be 8080
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", debug=True, port=8080, allow_unsafe_werkzeug=True)
+    #socketio.run(app, host="0.0.0.0", debug=True, port=8080, allow_unsafe_werkzeug=True, ssl_context=('/etc/nginx/cert.pem', '/etc/nginx/private.key'))
+    app.run(debug=True, host="0.0.0.0", port=8080)

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+</head>
+<body>
+    <h1>10 Sec Quiz</h1>
+    <p>Remaining Time: <span id="timer">{{ remaining_time }}</span> seconds</p>
+    <form id="quizForm" action="/leaderboard" method="post">
+        <h3>Question 1: Who teaches CSE312</h3>
+        <input type="radio" name="question1" value="Jesse"> Jesse<br>
+        <input type="radio" name="question1" value="Matthew"> Matthew<br>
+        <input type="radio" name="question1" value="Carl"> Carl<br>
+        <input type="radio" name="question1" value="Lukasz"> Lukasz<br>
+        <button type="submit">Submit Quiz</button>
+    </form>
+
+</body>
+<script>
+    /* uses AJAX to fetch remaining time */
+    function updateRemainingTime() {
+        fetch('/remaining_time')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('timer').innerText = data.remaining_time;
+                if (data.remaining_time <= 0) {
+                    document.getElementById('quizForm').submit();
+                }
+            });
+    }
+    updateRemainingTime();
+    setInterval(updateRemainingTime, 1); 
+</script>
+</html>
