@@ -1,5 +1,5 @@
 # cse312project
-CSE312 project link -> hobbied.bond
+CSE312 project link -> hobbied.site
 
 
 For Project Part 3, Objective 3, we added a functionality for resetting password. Users would be able to reset their password if the username is in the database and the old password matches with the current password.
