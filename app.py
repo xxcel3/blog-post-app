@@ -27,9 +27,6 @@ quiz_duration = 10
 blocked_time = 0
 blocked = False
 
-
-
-
 #dictionary to store request counts for each IP address
 ip_request_num = {}
 request_limit = 50
@@ -37,10 +34,8 @@ window_period = timedelta(seconds=10)
 block_period = timedelta(seconds=30)
 
 
-
-
 def rate_limit_reached():
-   ip_address = request.remote_addr
+   ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
    if ip_address in ip_request_num:
        last_request_time, request_num = ip_request_num[ip_address]
        # Check if the block time has passed
@@ -83,7 +78,7 @@ def limit_requests():
        return make_response("Too Many Requests", 429)
 
 
-   ip_address = request.remote_addr
+   ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
    if ip_address in ip_request_num:
        last_request_time, request_num = ip_request_num[ip_address]
        if request_num <= request_limit:
