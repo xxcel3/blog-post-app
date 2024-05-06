@@ -86,7 +86,7 @@ def limit_requests():
    ip_address = request.remote_addr
    if ip_address in ip_request_num:
        last_request_time, request_num = ip_request_num[ip_address]
-       if request_num < 50:
+       if request_num <= request_limit:
            # Increment the request count for the IP address
            ip_request_num[ip_address] = (datetime.now(), request_num + 1)
        else:
