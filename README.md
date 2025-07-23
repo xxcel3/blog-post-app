@@ -1,18 +1,78 @@
-# cse312project
-CSE312 project link -> hobbied.site
+# 📝 Flask Blog & Social App
 
+A full-featured social blogging platform built with **Flask** and **MongoDB**, allowing users to post content, chat under posts, interact through likes, and take quizzes. It includes secure authentication, multimedia support, rate limiting, and a leaderboard — all containerized using Docker Compose.
 
-For Project Part 3, Objective 3, we added a functionality for resetting password. Users would be able to reset their password if the username is in the database and the old password matches with the current password.
-There will be an error message if the username is not in the database or the old password is incorrect and there will be a success message if otherwise. 
-The testing procedure is below:
+---
 
-1) Start your server with "docker compose up"
-2) Open a browser and navigate to http://localhost:8080/
-3) Register an account in registration form
-4) Login with account to verify this username and password then logout
-5) Attempt to reset passwords with wrong username
-7) Attempt to reset passwords with wrong old password
-8) Reset correct username and correct old password with a new password
-9) Login with account to verify this username and the new password
+## 📦 Features
 
-For Project Part 3, Objective 1, is a 10 second timer quiz with scoreboard of submitted users.
+- 🔐 **User Authentication** (bcrypt, auth tokens via cookies)  
+- 📝 **Post Creation** with image/video upload support  
+- 💬 **Chat under each post**, tied by post ID in MongoDB  
+- 👍 **Like/Unlike System** with per-user like tracking  
+- ⏱️ **Timed Quiz** with dynamic leaderboard  
+- 📉 **IP-Based Rate Limiting**  
+- 🧾 **Security Headers** (`X-Content-Type-Options: nosniff`)  
+- 🗃️ **MongoDB** for users, posts, chats, and quiz state  
+- 🐳 **Docker Compose** for easy setup and deployment  
+
+---
+
+## 🧰 Tech Stack
+
+- **Backend**: Python + Flask  
+- **Database**: MongoDB  
+- **Frontend**: HTML, CSS, JavaScript  
+- **Deployment**: Docker, Docker Compose  
+
+---
+
+## 🚀 How to Run Locally
+
+### 🔧 1. Requirements
+
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+
+---
+
+### ▶️ 2. Run the App
+
+In the root project directory:
+
+```bash
+docker-compose up --build
+```
+
+This will:
+
+- Start the Flask app on port `8080`
+- Start MongoDB (via Docker) on `mongo:27017`
+
+---
+
+### 🌐 3. Open in Browser
+
+Visit:
+
+```
+http://localhost:8080/
+```
+
+You can now:
+- Register / Log in
+- Create and browse posts
+- Chat under posts
+- Like/unlike content
+- Take a quiz and view the leaderboard
+
+---
+
+## 🔒 Security Notes
+
+- Passwords are hashed with **bcrypt**
+- Auth tokens are stored securely via **HttpOnly** cookies
+- Rate limiting is enforced **per IP address**
+- Security headers included: `X-Content-Type-Options: nosniff`
+
+---
